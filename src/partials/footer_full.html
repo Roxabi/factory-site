@@ -1,0 +1,56 @@
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <a class="brand" href="{{home_href}}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 170" width="22" height="22" role="img" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="ft-dF" x1="0.5" y1="0" x2="0.5" y2="1"><stop offset="0%" stop-color="#2a1808"/><stop offset="40%" stop-color="#1a0f06"/><stop offset="100%" stop-color="#0d0d14"/></linearGradient>
+              <linearGradient id="ft-lF" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e85d04" stop-opacity="0.18"/><stop offset="100%" stop-color="#0a0a0f" stop-opacity="0"/></linearGradient>
+              <linearGradient id="ft-rF" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f97316" stop-opacity="0.10"/><stop offset="100%" stop-color="#0a0a0f" stop-opacity="0"/></linearGradient>
+              <radialGradient id="ft-cG" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#f97316" stop-opacity="0.75"/><stop offset="40%" stop-color="#e85d04" stop-opacity="0.35"/><stop offset="100%" stop-color="#e85d04" stop-opacity="0"/></radialGradient>
+              <radialGradient id="ft-hR" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fafafa"/><stop offset="35%" stop-color="#f97316"/><stop offset="100%" stop-color="#e85d04" stop-opacity="0"/></radialGradient>
+              <filter id="ft-gS" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <clipPath id="ft-dC"><polygon points="120,14 182,82 156,142 120,158 84,142 58,82"/></clipPath>
+            </defs>
+            <g>
+              <polygon points="120,14 182,82 156,142 120,158 84,142 58,82" fill="url(#ft-dF)"/>
+              <polygon points="120,14 58,82 84,142 120,100" fill="url(#ft-lF)" stroke="#e85d04" stroke-width="0.7" stroke-opacity="0.5"/>
+              <polygon points="120,14 182,82 156,142 120,100" fill="url(#ft-rF)" stroke="#f97316" stroke-width="0.7" stroke-opacity="0.4"/>
+              <line x1="120" y1="14" x2="58" y2="82" stroke="#e85d04" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
+              <line x1="120" y1="14" x2="182" y2="82" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+              <circle cx="120" cy="95" r="51" fill="url(#ft-cG)" clip-path="url(#ft-dC)"/>
+              <circle cx="120" cy="95" r="5.5" fill="url(#ft-hR)" filter="url(#ft-gS)"/>
+              <circle cx="120" cy="95" r="2.2" fill="#fafafa"/>
+            </g>
+          </svg>
+          <span style="font-family:var(--font-head,'Outfit'),sans-serif;font-weight:800">Roxabi Factory</span>
+        </a>
+        <p class="mono-note" style="margin-top:var(--s-md);max-width:280px">{{footer_tagline}}</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <span class="h">{{f_product}}</span>
+          <a href="{{tools_href}}">{{nav_tools}}</a>
+          <a href="{{documentation_href}}">{{f_docs}}</a>
+          <a href="{{github}}" rel="noopener">{{f_github}}</a>
+          <a href="{{github}}/issues" rel="noopener">{{f_issues}}</a>
+        </div>
+        <div class="footer-col">
+          <span class="h">{{f_resources}}</span>
+          <a href="{{agent1_href}}">{{f_agent1}}</a>
+          <a href="{{legal_href}}">{{f_legal_notice}}</a>
+        </div>
+        <div class="footer-col">
+          <span class="h">{{f_legal}}</span>
+          <a href="{{f_sibling_href}}" rel="noopener">{{f_sibling_label}}</a>
+          <span class="mono-note">{{f_sibling}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>{{f_copyright}}</span>
+    <span class="mono-note">{{footer_note}}</span>
+  </div>
+</footer>

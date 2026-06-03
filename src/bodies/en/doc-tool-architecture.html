@@ -1,0 +1,286 @@
+<main>
+<section class="doc-hero">
+  <div class="wrap">
+    <p class="section-label">REFERENCE MODEL</p>
+    <h1>Tool Architecture</h1>
+    <p class="lead prose" style="margin:var(--s-md) auto 0">The conceptual model behind the Roxabi Factory tool layer — five layers, two taxonomies, a precise runtime vocabulary, and the two discriminators that keep the whole thing honest.</p>
+    <div class="doc-hero-tags">{{doc_tags}}</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap constitution">
+    <nav class="toc" aria-label="Sections">
+      <span class="t">Sections</span>
+      <a href="#sec-1">1 — The Stack</a>
+      <a href="#sec-2">2 — Runtime Vocabulary</a>
+      <a href="#sec-3">3 — Taxonomy A: Five Layers</a>
+      <a href="#sec-4">4 — Taxonomy B: Domain-Nature</a>
+      <a href="#sec-5">5 — The Two Discriminators</a>
+      <a href="#sec-6">6 — Key Invariants</a>
+    </nav>
+
+    <div class="const-body prose">
+
+      <div class="titre" id="sec-1">
+        <span class="label">01</span>
+        <h2>The Stack</h2>
+        <p>Every capability the Factory exposes to an agent sits in a layered stack. At the base, a <strong>worker</strong> — a compute instance — runs a <strong>workerEngine</strong>: a coded, deterministic pipeline. That engine calls three kinds of step: the <strong>harness</strong> (a pure agentic turn where the model decides), the <strong>tools</strong> themselves, and plain internal code. Above the engine, tools are backed by <strong>providers</strong>; when a provider is a self-hosted process on the bus with a heartbeat, it is a <strong>satellite</strong>.</p>
+        <figure class="doc-figure">
+          <svg viewBox="0 0 720 300" role="img" aria-label="The Factory stack: a worker runs a workerEngine, which calls the harness, tools, and internal code as steps; tools are backed by providers, which when self-hosted on the bus are satellites." style="width:100%;height:auto">
+            <defs><marker id="ta0-arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="var(--accent)"/></marker></defs>
+            <!-- Worker -->
+            <rect x="16" y="16" width="688" height="266" rx="10" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.5"/>
+            <text x="360" y="42" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" letter-spacing="0.12em" fill="var(--text-dim)">WORKER  (compute instance)</text>
+            <!-- workerEngine -->
+            <rect x="36" y="56" width="648" height="180" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+            <text x="360" y="80" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="var(--text)">workerEngine</text>
+            <text x="360" y="96" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">deterministic pipeline · orchestrates all steps</text>
+            <!-- 3 boxes inside workerEngine -->
+            <rect x="60" y="110" width="166" height="106" rx="6" fill="var(--panel)" stroke="var(--accent)" stroke-width="1.2"/>
+            <text x="143" y="140" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="var(--text)">harness</text>
+            <text x="143" y="158" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">pure agentic turn</text>
+            <text x="143" y="174" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">model decides</text>
+            <text x="143" y="190" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-style="italic" fill="var(--text-dim)">callee, never orchestrator</text>
+            <rect x="277" y="110" width="166" height="106" rx="6" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.2"/>
+            <text x="360" y="140" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="var(--text)">tools</text>
+            <text x="360" y="158" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">capability surfaces</text>
+            <text x="360" y="174" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">backed by providers</text>
+            <text x="360" y="190" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-style="italic" fill="var(--text-dim)">uniform dispatch</text>
+            <rect x="494" y="110" width="166" height="106" rx="6" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.2"/>
+            <text x="577" y="140" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="700" fill="var(--text)">internal code</text>
+            <text x="577" y="158" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">direct logic</text>
+            <text x="577" y="174" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">deterministic</text>
+            <text x="577" y="190" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-style="italic" fill="var(--text-dim)">no model involved</text>
+            <!-- annotation below workerEngine -->
+            <text x="360" y="254" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-dim)">tools → backed by providers (satellites if self-hosted on the bus)</text>
+          </svg>
+          <figcaption>The Factory stack. A worker runs a workerEngine that calls three kinds of step — the harness, tools, and internal code. Tools are backed by providers; a provider that runs as a self-hosted process on the NATS bus with a heartbeat is a satellite.</figcaption>
+        </figure>
+        <div class="callout"><p>The harness is a <em>callee</em> of the engine, not a flavour of it. Agency where you want a decision, code where you want a guarantee — the two are layered, never unified.</p></div>
+      </div>
+
+      <div class="titre" id="sec-2">
+        <span class="label">02</span>
+        <h2>Runtime Vocabulary</h2>
+        <p>Six terms, defined precisely, keep the model from drifting. The historical ambiguity of <em>worker</em> (once used for both compute instances and tool providers) is resolved here.</p>
+        <div class="doc-table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Nature</th>
+                <th>Definition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>workerEngine</code></td>
+                <td>plumbing · runtime</td>
+                <td>Coded, deterministic pipeline; orchestrates harness, tools, and internal code.</td>
+              </tr>
+              <tr>
+                <td><code>harness</code></td>
+                <td>plumbing · agentic</td>
+                <td>One pure agentic turn — the LLM decides, its in-turn tools fire. No pipeline logic. A callee of the workerEngine.</td>
+              </tr>
+              <tr>
+                <td><code>worker</code></td>
+                <td>plumbing · compute</td>
+                <td>A deployed instance that runs a workerEngine. Consumes tools. Not a tool, not a provider.</td>
+              </tr>
+              <tr>
+                <td><code>tool</code></td>
+                <td><strong>tool-nature</strong></td>
+                <td>A capability surface invoked by the harness or the workerEngine.</td>
+              </tr>
+              <tr>
+                <td><code>provider</code></td>
+                <td>plumbing · backend</td>
+                <td>The <strong>role</strong> that backs one or more tools. Transport-agnostic. One provider exposes many tools.</td>
+              </tr>
+              <tr>
+                <td><code>satellite</code></td>
+                <td>plumbing · deployment</td>
+                <td>A provider deployed as a self-hosted NATS process with a heartbeat. Every satellite is a provider; not every provider is a satellite.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>One term deliberately excluded: a <strong>backing service</strong> — a full self-hosted application like a Postiz fork (web server, database, Redis) — is infrastructure, like Postgres. A running container is not a heartbeat. The heartbeat comes from <em>our</em> NATS adapter placed in front of it. Backing service, provider, tool: three layers, never collapsed.</p>
+      </div>
+
+      <div class="titre" id="sec-3">
+        <span class="label">03</span>
+        <h2>Taxonomy A — Five Layers</h2>
+        <p>Tools are not uniformly atomic. The model has five layers of composition, from a single compiled call up to a recursive sub-agent — and one uniform dispatcher reaches all of them.</p>
+        <div class="doc-table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Name</th>
+                <th>What</th>
+                <th>Transport</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>L0a</strong></td>
+                <td>Built-in atomic</td>
+                <td>Compiled into the engine, in-process, always available. <code>bash</code>, file read/write, web fetch.</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><strong>L0b</strong></td>
+                <td>Remote atomic</td>
+                <td>A provider on the bus, discovered by heartbeat. <code>image.generate</code>, <code>voice.tts</code>.</td>
+                <td>NATS / stdio / HTTP</td>
+              </tr>
+              <tr>
+                <td><strong>L1</strong></td>
+                <td>Macro</td>
+                <td>A deterministic chain of primitives — no second model in the loop.</td>
+                <td>in-proc or remote</td>
+              </tr>
+              <tr>
+                <td><strong>L2</strong></td>
+                <td>Skill</td>
+                <td>An instruction-layer composite (a <code>SKILL.md</code> document) that guides the model through a domain sequence.</td>
+                <td>prompt injection</td>
+              </tr>
+              <tr>
+                <td><strong>L3</strong></td>
+                <td>Sub-agent</td>
+                <td>A nested, isolated agentic call that returns a summary upward.</td>
+                <td>NATS harness</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The decisive choice is a <strong>uniform dispatcher</strong>: one access-control gate, one result type, the transport varying underneath. To the model's reasoning loop, a remote <code>image.generate</code> and a built-in <code>bash</code> are identical — same shape, same result type. The transport difference is invisible.</p>
+        <figure class="doc-figure">
+          <svg viewBox="0 0 720 430" role="img" aria-label="The five tool layers stacked from built-in atomic at the base to sub-agent at the top; a single uniform dispatcher reaches all layers on the right." style="width:100%;height:auto">
+            <defs><marker id="ta2-arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="var(--accent)"/></marker></defs>
+            <text x="26" y="215" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.15em" fill="var(--text-dim)" transform="rotate(-90 26 215)">COMPOSITION ↑</text>
+            <rect x="120" y="24" width="470" height="62" rx="8" fill="var(--accent)"/>
+            <text x="142" y="50" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--accent-on)">L3 — Sub-agent</text>
+            <text x="142" y="70" font-family="var(--font-mono)" font-size="10" fill="var(--accent-on)">nested isolated agent · returns a summary upward · NATS harness</text>
+            <rect x="120" y="100" width="470" height="62" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="142" y="126" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L2 — Skill</text>
+            <text x="142" y="146" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">instruction-layer composite (SKILL.md) · guides the model · prompt injection</text>
+            <rect x="120" y="176" width="470" height="62" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="142" y="202" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L1 — Macro</text>
+            <text x="142" y="222" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">deterministic chain · no second model · in-proc or remote</text>
+            <rect x="120" y="252" width="470" height="62" rx="8" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.4"/>
+            <text x="142" y="278" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L0b — Remote atomic</text>
+            <text x="142" y="298" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">provider on the bus · heartbeat-discovered · NATS / stdio / HTTP</text>
+            <rect x="120" y="328" width="470" height="62" rx="8" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.4"/>
+            <text x="142" y="354" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L0a — Built-in atomic</text>
+            <text x="142" y="374" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">compiled in-process · always available · bash · file · web fetch</text>
+            <line x1="624" y1="390" x2="624" y2="34" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ta2-arr)"/>
+            <text x="642" y="215" text-anchor="middle" font-family="var(--font-mono)" font-size="10" letter-spacing="0.1em" fill="var(--text-muted)" transform="rotate(90 642 215)">UNIFORM DISPATCH</text>
+          </svg>
+          <figcaption>Five layers, one dispatcher. From a built-in primitive to a recursive sub-agent, every tool passes the same access-control gate and returns the same result type — only the transport changes underneath.</figcaption>
+        </figure>
+      </div>
+
+      <div class="titre" id="sec-4">
+        <span class="label">04</span>
+        <h2>Taxonomy B — Domain-Nature</h2>
+        <p>The NATS wire contracts are split by <em>nature</em>, not by function. This is the axis that organises the tool plane.</p>
+        <p>A domain is <strong>tool-nature</strong> when its sole reason to exist is to expose a capability the model invokes — voice, image, and the satellites to come. Everything else is <strong>plumbing</strong>: the inference transport, the job bus, persistence, security, observability, delivery.</p>
+        <div class="doc-table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Nature</th>
+                <th>Domains</th>
+                <th>Subject prefix</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>tool</strong></td>
+                <td><code>voice</code> · <code>image</code> · +future: <code>postiz</code>, <code>vault</code>, <code>scrape</code>, <code>camoufox</code></td>
+                <td><code>factory.tool.&lt;cap&gt;.*</code></td>
+              </tr>
+              <tr>
+                <td><strong>plumbing</strong></td>
+                <td><code>cli</code> · <code>llm</code> · <code>jobs</code> · <code>gh</code> · <code>turns</code> · <code>blob</code> · <code>verify</code> · <code>audit</code> · <code>event</code> · <code>outbound</code></td>
+                <td><code>factory.&lt;domain&gt;.*</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Tool-nature subjects carry a <code>tool.</code> infix so the consumer side can subscribe to the <em>entire</em> tool plane at once with <code>factory.tool.&gt;</code>, and discover what is available through a single registry — no per-kind subscription logic needed.</p>
+        <p>The package shape mirrors this split: <code>roxabi-contracts/tool/{voice,image,…}</code> holds the wire schemas for each tool domain; <code>roxabi-contracts/tools/</code> holds the <em>protocol</em> layer — <code>InProcessTool</code>, <code>RemoteTool</code>, <code>ToolManifest</code>.</p>
+        <div class="callout"><p>Once tools form a plane, the harness and the workers discover and address them as one. That addressability is the payoff of the split.</p></div>
+      </div>
+
+      <div class="titre" id="sec-5">
+        <span class="label">05</span>
+        <h2>The Two Discriminators</h2>
+        <p>Two rules keep the model precise. Without them, the boundaries drift.</p>
+
+        <h3>Rule 1 — tool-surface &ne; tool-nature</h3>
+        <p>A plumbing domain may <em>expose</em> a tool without <em>being</em> tool-nature. The <code>gh</code> domain exposes a built-in <code>gh.list_prs</code>; the <code>llm</code> domain exposes <code>llm.generate</code> — both stay plumbing. Surfacing a tool does not promote the wire domain.</p>
+        <div class="formula-box"><pre><code>tool-surface  ≠  tool-nature
+
+  github plumbing      exposes a built-in tool   → stays plumbing
+  inference substrate  exposes a generate call   → stays plumbing</code></pre></div>
+        <p>This rule is what keeps the separation honest instead of letting everything drift into &laquo;&nbsp;tool&nbsp;&raquo;. The test is not whether a domain exposes a tool-shaped call — it is whether the domain's entire purpose is capability exposure.</p>
+
+        <h3>Rule 2 — provider &sup; satellite</h3>
+        <p>Not every provider is a satellite. A provider is a <strong>satellite</strong> only when it is a self-hosted process we run on the NATS bus with a heartbeat. A cloud API we call, or a one-shot command-line tool, is a provider without a satellite's footprint.</p>
+        <div class="formula-box"><pre><code>provider  ⊋  satellite
+
+  self-hosted process on the bus   → satellite  (heartbeat: voiceCLI, imageCLI, our Postiz adapter)
+  cloud API / one-shot stdio CLI   → provider   (no heartbeat: X, GitHub, a bash tool)</code></pre></div>
+        <figure class="doc-figure">
+          <svg viewBox="0 0 720 260" role="img" aria-label="Two provider shapes: a satellite (self-hosted NATS process with heartbeat, shown with a pulsing ring) and a non-satellite provider (cloud API or one-shot CLI, shown without heartbeat)." style="width:100%;height:auto">
+            <defs><marker id="ta3-arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="var(--accent)"/></marker></defs>
+            <!-- Satellite box -->
+            <rect x="16" y="32" width="304" height="186" rx="10" fill="var(--panel)" stroke="var(--accent)" stroke-width="2"/>
+            <text x="168" y="60" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="var(--text)">Satellite</text>
+            <text x="168" y="78" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">provider · self-hosted on NATS bus</text>
+            <rect x="36" y="94" width="264" height="36" rx="6" fill="var(--surface)" stroke="var(--border-hi)" stroke-width="1.2"/>
+            <text x="168" y="117" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text)">voiceCLI · imageCLI · Postiz adapter</text>
+            <rect x="36" y="140" width="264" height="36" rx="6" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.2"/>
+            <text x="168" y="163" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text)">heartbeat ✓</text>
+            <text x="168" y="208" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-style="italic" fill="var(--text-dim)">running container ≠ heartbeat — heartbeat comes from our adapter</text>
+            <!-- Non-satellite box -->
+            <rect x="400" y="32" width="304" height="186" rx="10" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.5"/>
+            <text x="552" y="60" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="700" fill="var(--text)">Non-satellite provider</text>
+            <text x="552" y="78" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--text-muted)">provider · no bus process · no heartbeat</text>
+            <rect x="420" y="94" width="264" height="36" rx="6" fill="var(--surface)" stroke="var(--border-hi)" stroke-width="1.2"/>
+            <text x="552" y="117" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text)">X API · GitHub API · one-shot CLI</text>
+            <rect x="420" y="140" width="264" height="36" rx="6" fill="var(--surface)" stroke="var(--border-hi)" stroke-width="1.2"/>
+            <text x="552" y="163" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">heartbeat ✗</text>
+            <text x="552" y="208" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-style="italic" fill="var(--text-dim)">in-proc HTTP or stdio — no NATS identity</text>
+          </svg>
+          <figcaption>Two provider shapes. A satellite runs on the bus, emits a heartbeat, and has a NATS identity — the engine discovers it automatically. A non-satellite provider (cloud API, one-shot CLI) is called directly, with no bus footprint.</figcaption>
+        </figure>
+        <p>And the third layer to never collapse: a <strong>backing service</strong> — a full application like our Postiz fork (web server, database, Redis) — is infrastructure, like Postgres. The <em>backing service</em> is not the provider; the provider is our NATS adapter in front of it.</p>
+        <div class="callout"><p>Backing service → provider → tool: three layers. A running container is not a heartbeat.</p></div>
+      </div>
+
+      <div class="titre" id="sec-6">
+        <span class="label">06</span>
+        <h2>Key Invariants</h2>
+        <p>Six invariants hold the model together. If any one is violated, the taxonomy becomes inconsistent.</p>
+        <ul class="feature-list" style="margin-top:var(--s-md)">
+          <li><strong>Worker ≠ tool.</strong> A worker consumes tools and runs on a workerEngine. It is not a tool and not a provider.</li>
+          <li><strong>Harness is pure agentic.</strong> The harness has no workflow logic. It is called by the workerEngine — layered, never unified with it.</li>
+          <li><strong>Uniform dispatch.</strong> One access-control gate, one <code>ToolResult</code>, transport-agnostic. No per-kind branched pipeline.</li>
+          <li><strong>tool-surface ≠ tool-nature.</strong> A plumbing domain that exposes a tool-shaped call stays plumbing. Surfacing a tool does not promote the wire domain.</li>
+          <li><strong>provider ⊋ satellite.</strong> Self-hosted on the bus with a heartbeat → satellite. Cloud / one-shot → non-satellite provider. A running backing container is not a heartbeat.</li>
+          <li><strong>worker = compute-on-engine.</strong> The word "worker" means this, not a tool-backing thing. Tool-backing things are <em>providers</em>; the NATS-deployed kind are <em>satellites</em>.</li>
+        </ul>
+        <div class="callout"><p>This model is design-locked (validated 2026-06-02). Implementation is parked pending the in-flight bus-subject migration — the design is settled so it can be built cleanly once the migration lands.</p></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</main>

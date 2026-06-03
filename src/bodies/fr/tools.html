@@ -1,0 +1,153 @@
+<main>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Roxabi Factory",
+      "item": "https://factory.roxabi.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Outils disponibles",
+      "item": "https://factory.roxabi.dev/fr/tools/"
+    }
+  ]
+}
+</script>
+
+<section class="doc-hero">
+  <div class="wrap">
+    <p class="section-label">Roxabi Factory · Outils</p>
+    <h1>Outils disponibles</h1>
+    <p class="lead prose" style="margin:var(--s-md) auto 0">
+      La couche outil est ce par quoi les agents Factory agissent sur le monde — voix, image, artefacts visuels, vidéo, curation, publication sociale.
+      Chaque outil est une <strong>surface de capacité</strong> adossée à un provider ; les workers consomment des outils mais n'en sont pas.
+      Les CLIs listés ici fonctionnent de manière autonome aujourd'hui. Leur intégration dans le moteur Factory comme providers first-class de la couche tool est sur la feuille de route, suivie sous <a href="https://github.com/Roxabi/roxabi-factory/issues/1670" rel="noopener">#1670</a>.
+    </p>
+    <p class="meta" style="margin-top:var(--s-md)">
+      Cette page recense les <em>instances</em> de la couche tool. Pour le modèle —
+      taxonomie, vocabulaire runtime, distinction domaine-nature — voir
+      <a href="/fr/documentation/tool-architecture/">Architecture des outils</a>.
+    </p>
+  </div>
+</section>
+
+<section id="roxabi-primitives">
+  <div class="wrap">
+    <p class="section-label" data-reveal>Primitives Roxabi</p>
+    <h2 data-reveal>CLIs de capacité auto-hébergés</h2>
+    <p class="lead" data-reveal style="max-width:640px;margin-top:var(--s-md)">
+      Outils open source construits et maintenus par Roxabi. Chacun fonctionne de façon autonome sur votre propre matériel — aucun lock-in cloud, aucune télémétrie.
+      Lorsque la couche tool sera disponible, ils s'enregistreront comme providers satellites sur le bus NATS de Factory.
+    </p>
+
+    <div class="grid grid-2" style="margin-top:var(--s-xl)">
+
+      <a class="card proj-card" href="https://roxabi.dev/projects/voicecli/" rel="noopener" data-reveal>
+        <div class="top">
+          <h3>voiceCLI</h3>
+          <span class="tag tag-live">En service</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Voix · TTS / STT</p>
+        <p>Un seul CLI pour la synthèse vocale et la transcription en local. Pilote Qwen3-TTS, Chatterbox et Whisper depuis un script Markdown unique. Un satellite NATS permet de diffuser la voix sur tous les nœuds du réseau.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)">
+          voiceCLI sur roxabi.dev <span class="arrow">→</span>
+        </p>
+      </a>
+
+      <a class="card proj-card" href="https://roxabi.dev/projects/imagecli/" rel="noopener" data-reveal>
+        <div class="top">
+          <h3>imageCLI</h3>
+          <span class="tag tag-ondemand">À la demande</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Image · génération</p>
+        <p>Un seul CLI pour la génération d'images en local. FLUX.2, FLUX.1 (+ verrou de visage PuLID) et SD3.5 derrière une seule commande. Quantisation et gestion VRAM automatiques. Satellite NATS pour le rendu cross-host. Activé lorsqu'un nœud GPU est en ligne.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)">
+          imageCLI sur roxabi.dev <span class="arrow">→</span>
+        </p>
+      </a>
+
+      <a class="card proj-card" href="https://roxabi.dev/projects/roxabi-forge/" rel="noopener" data-reveal>
+        <div class="top">
+          <h3>roxabi-forge</h3>
+          <span class="tag tag-live">En service</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Artefacts visuels · diagrammes, galeries, slides</p>
+        <p>Un plugin Claude Code qui transforme « explique-moi ça » en artefact HTML autonome — diagrammes, galeries, présentations, guides. Huit skills, déploiement en une commande. Candidat à un domaine tool d'artefacts visuels dans la couche Factory.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)">
+          roxabi-forge sur roxabi.dev <span class="arrow">→</span>
+        </p>
+      </a>
+
+      <a class="card proj-card" href="https://github.com/Roxabi/roxabi-production" rel="noopener" data-reveal>
+        <div class="top">
+          <h3>roxabi-production</h3>
+          <span class="tag tag-ondemand">À la demande</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Vidéo · génération</p>
+        <p>Pipeline de génération vidéo. Combine génération d'images, synthèse audio et composition de scènes pour produire des vidéos finies. S'exécute à la demande sur du matériel GPU. Candidat à un domaine tool vidéo.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)">
+          Dépôt <span class="arrow">→</span>
+        </p>
+      </a>
+
+      <a class="card proj-card" href="https://github.com/Roxabi/roxabi-intel" rel="noopener" data-reveal>
+        <div class="top">
+          <h3>roxabi-intel</h3>
+          <span class="tag tag-ondemand">À la demande</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Curation · lien → contenu structuré</p>
+        <p>Transforme un flux de liens Discord en documents Markdown structurés et en galeries indexées. Planifié ou déclenché, sans pipeline manuel. Correspond au futur domaine tool <code>scrape</code> dans la taxonomie Factory.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)">
+          Dépôt <span class="arrow">→</span>
+        </p>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section id="external-integrations" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <p class="section-label" data-reveal>Intégration externe</p>
+    <h2 data-reveal>Surface de publication tierce</h2>
+    <p class="lead" data-reveal style="max-width:640px;margin-top:var(--s-md)">
+      La couche publication sociale relie les jobs Factory aux plateformes externes. Un adaptateur satellite NATS fera le pont entre le backing service et la couche tool.
+    </p>
+
+    <div class="grid grid-2" style="margin-top:var(--s-xl)">
+
+      <div class="card proj-card" data-reveal>
+        <div class="top">
+          <h3>Postiz</h3>
+          <span class="tag tag-soon">Bientôt</span>
+        </div>
+        <p class="meta" style="margin-bottom:var(--s-sm)">Publication sociale · jobs CM</p>
+        <p>Publication sociale auto-hébergée via <a href="https://postiz.com" rel="noopener">Postiz</a>. Un backing service <code>roxabi-postiz</code> (web + DB + Redis) est exposé par un adaptateur satellite NATS qui crée un domaine tool <code>postiz</code>. L'adaptateur est suivi sous <a href="https://github.com/Roxabi/roxabi-factory/issues/1713" rel="noopener">#1713</a>. Les jobs CM de Factory dispatacheront les actions de publication via cet outil dès que l'adaptateur sera disponible.</p>
+        <p class="portfolio-note" style="margin-top:var(--s-md)" aria-label="Bientôt disponible — pas encore de lien">
+          Bientôt disponible
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="cta-band" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <h2 data-reveal>Le modèle tool, en détail.</h2>
+    <p class="lead" data-reveal style="max-width:540px;margin-inline:auto">Taxonomie, vocabulaire runtime, discriminateurs domaine-nature, et la distinction provider / satellite — en un seul document.</p>
+    <div class="hero-cta" data-reveal>
+      <a class="btn btn-primary" href="/fr/documentation/tool-architecture/">Lire l'architecture des outils →</a>
+      <a class="btn btn-ghost" href="https://github.com/Roxabi/roxabi-factory" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</section>
+
+</main>

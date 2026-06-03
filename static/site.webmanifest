@@ -1,0 +1,16 @@
+{
+  "name": "Roxabi Factory",
+  "short_name": "Factory",
+  "description": "A self-hostable agent engine — hexagonal core, hub-and-spoke over NATS, capability workers composed into a fleet.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/logo/factory-favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

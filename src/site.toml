@@ -1,0 +1,357 @@
+# factory-site — build manifest (single source of truth)
+# Consumed by src/build.py. All SEO (canonical, hreflang, og:url, og:locale,
+# breadcrumbs) is DERIVED from (path, lang) below — never hand-written per page.
+
+base       = "https://factory.roxabi.dev"
+github     = "https://github.com/Roxabi/roxabi-factory"
+org_name   = "Roxabi Factory"
+lastmod    = "2026-06-03"          # sitemap <lastmod>; bump on content change
+
+# ── Per-language chrome strings (nav, footer, locale, og image) ──────────────
+[lang.en]
+prefix            = ""
+locale            = "en_US"
+locale_alt        = "fr_FR"
+og_image          = "/assets/og/factory-og.png"
+inlanguage        = ["en", "fr"]
+nav_primary_label = "Primary"
+nav_menu          = "Menu"
+skip_link         = "Skip to content"
+brand_aria        = "Roxabi Factory home"
+nav_tools         = "Tools"
+nav_docs          = "Docs"
+doc_read          = "Read"
+doc_all           = "All documentation"
+doc_nav_aria      = "Document navigation"
+doc_filter_all    = "All"
+doc_filter_aria   = "Filter documentation by tag"
+doc_version       = "Version"
+doc_updated       = "Updated"
+github_aria       = "Roxabi Factory on GitHub"
+theme_aria        = "Switch theme"
+lang_label        = "EN"           # shows CURRENT language (like the theme toggle)
+lang_hreflang     = "fr"           # the toggle points at the OTHER language
+lang_aria         = "Voir en français"
+lang_title        = "Français"
+home_crumb        = "Home"
+footer_tagline    = "Raw in. Crafted out. Your agents, your hardware, your forge."
+footer_note       = "Built in the open. No telemetry. No lock-in. Your sovereignty by design."
+f_product         = "Product"
+f_resources       = "Resources"
+f_github          = "GitHub"
+f_issues          = "Issues"
+f_docs            = "Documentation"
+f_agent1          = "Agent #1"
+f_legal           = "Legal"
+f_legal_notice    = "Legal notice"
+f_sibling         = "Foundation brand — shared amber family."
+f_sibling_href    = "https://roxabi.dev"
+f_sibling_label   = "roxabi.dev"
+f_copyright       = "© 2026 Roxabi · MIT License"
+
+[lang.fr]
+prefix            = "/fr"
+locale            = "fr_FR"
+locale_alt        = "en_US"
+og_image          = "/assets/og/factory-og-fr.png"
+inlanguage        = ["fr", "en"]
+nav_primary_label = "Principale"
+nav_menu          = "Menu"
+skip_link         = "Aller au contenu"
+brand_aria        = "Accueil Roxabi Factory"
+nav_tools         = "Outils"
+nav_docs          = "Docs"
+doc_read          = "Lire"
+doc_all           = "Toute la documentation"
+doc_nav_aria      = "Navigation des documents"
+doc_filter_all    = "Tout"
+doc_filter_aria   = "Filtrer la documentation par tag"
+doc_version       = "Version"
+doc_updated       = "Mis à jour"
+github_aria       = "Roxabi Factory sur GitHub"
+theme_aria        = "Changer de thème"
+lang_label        = "FR"
+lang_hreflang     = "en"
+lang_aria         = "View in English"
+lang_title        = "English"
+home_crumb        = "Accueil"
+footer_tagline    = "Brut en entrée. Forgé en sortie. Tes agents, ton matériel, ta forge."
+footer_note       = "Construit à ciel ouvert. Aucune télémétrie. Aucun verrouillage. Ta souveraineté par conception."
+f_product         = "Produit"
+f_resources       = "Ressources"
+f_github          = "GitHub"
+f_issues          = "Issues"
+f_docs            = "Documentation"
+f_agent1          = "Agent n°1"
+f_legal           = "Légal"
+f_legal_notice    = "Mentions légales"
+f_sibling         = "Marque fondation — famille ambre partagée."
+f_sibling_href    = "https://roxabi.dev"
+f_sibling_label   = "roxabi.dev"
+f_copyright       = "© 2026 Roxabi · Licence MIT"
+
+# ── Pages. `path` is lang-agnostic and lang-prefix-free ("" = site root). ─────
+# `active` highlights a nav item. `jsonld` selects the structured-data builder.
+
+[[page]]
+id          = "home"
+path        = ""
+body        = "home"
+og_type     = "website"
+footer      = "full"
+shader      = "ember-forge"
+active      = ""
+jsonld      = "home"
+og_alt      = true
+changefreq  = "weekly"
+priority    = "1.0"
+  [page.en]
+  title    = "Roxabi Factory — Agent engine. Jobs layer. Your hardware."
+  desc     = "Roxabi Factory is a self-hostable agent engine — hexagonal core, hub-and-spoke over NATS, a jobs layer that orchestrates capability workers into a fleet. Raw in, crafted out. No lock-in."
+  og_title = "Roxabi Factory — Agent engine. Jobs layer. Your hardware."
+  og_desc  = "A self-hostable agent engine that composes open-source primitives into a fleet. Raw in, crafted out. Your hardware, your forge."
+  org_desc = "A self-hostable agent engine — hexagonal core, hub-and-spoke over NATS, capability workers composed into a fleet."
+  [page.fr]
+  title    = "Roxabi Factory — Moteur d'agents. Couche jobs. Ton matériel."
+  desc     = "Roxabi Factory est un moteur d'agents auto-hébergeable — cœur hexagonal, hub-and-spoke sur NATS, une couche jobs qui orchestre des workers de capacité en flotte. Brut en entrée, forgé en sortie. Sans verrouillage."
+  og_title = "Roxabi Factory — Moteur d'agents. Couche jobs. Ton matériel."
+  og_desc  = "Un moteur d'agents auto-hébergeable qui compose des primitives open-source en flotte. Brut en entrée, forgé en sortie. Ton matériel, ta forge."
+  org_desc = "Un moteur d'agents auto-hébergeable — cœur hexagonal, hub-and-spoke sur NATS, workers de capacité composés en flotte."
+
+[[page]]
+id          = "tools"
+path        = "tools/"
+body        = "tools"
+og_type     = "website"
+footer      = "full"
+shader      = false
+active      = "tools"
+jsonld      = "breadcrumb"
+ancestors   = ["home"]
+changefreq  = "monthly"
+priority    = "0.8"
+  [page.en]
+  title    = "Available Tools — Roxabi Factory"
+  desc     = "The capability tools wired into Roxabi Factory — voice, image, visual artifacts, video, curation, and social publishing. Each tool backed by an open-source provider, cards link to the canonical detail on roxabi.dev."
+  og_title = "Available Tools — Roxabi Factory"
+  og_desc  = "Voice, image, forge, video, intel, and social publishing — the six capabilities wired into the Factory fleet, each backed by an open-source provider."
+  crumb    = "Tools"
+  [page.fr]
+  title    = "Outils disponibles — Roxabi Factory"
+  desc     = "Les outils de capacité câblés dans Roxabi Factory — voix, image, artefacts visuels, vidéo, curation et publication sociale. Chaque outil adossé à un provider open-source, les cards pointent vers le détail canonique sur roxabi.dev."
+  og_title = "Outils disponibles — Roxabi Factory"
+  og_desc  = "Voix, image, forge, vidéo, intel et publication sociale — les six capacités câblées dans la flotte Factory, chacune adossée à un provider open-source."
+  crumb    = "Outils"
+
+[[page]]
+id          = "agent-1"
+path        = "agent-1/"
+body        = "agent-1"
+og_type     = "article"
+footer      = "full"
+shader      = false
+active      = ""
+jsonld      = "breadcrumb"
+ancestors   = ["home"]
+changefreq  = "monthly"
+priority    = "0.6"
+  [page.en]
+  title    = "Agent #1 — Roxabi Factory"
+  desc     = "Lyra — the first agent seeded into the Factory. The character, the persona, the voice. Where the engine becomes a presence."
+  og_title = "Agent #1 — Roxabi Factory"
+  og_desc  = "Lyra is the first agent seeded into the Factory — the character, the persona, the voice behind the engine."
+  crumb    = "Agent #1"
+  [page.fr]
+  title    = "Agent n°1 — Roxabi Factory"
+  desc     = "Lyra — le premier agent ensemencé dans la Factory. Le personnage, la persona, la voix. Là où le moteur devient une présence."
+  og_title = "Agent n°1 — Roxabi Factory"
+  og_desc  = "Lyra est le premier agent ensemencé dans la Factory — le personnage, la persona, la voix derrière le moteur."
+  crumb    = "Agent n°1"
+
+[[page]]
+id          = "documentation"
+path        = "documentation/"
+body        = "documentation"
+og_type     = "website"
+footer      = "full"
+shader      = false
+active      = "docs"
+jsonld      = "breadcrumb"
+collection  = "documentation"
+ancestors   = ["home"]
+changefreq  = "monthly"
+priority    = "0.7"
+  [page.en]
+  title    = "Documentation — Roxabi Factory"
+  desc     = "Roxabi Factory documentation — architecture guides, tool model, build roadmap, and the story behind the engine. Plain-spoken, public, organized by tag."
+  og_title = "Documentation — Roxabi Factory"
+  og_desc  = "Architecture guides, tool model, build roadmap, and the story behind the Factory engine. Organized by tag."
+  crumb    = "Documentation"
+  [page.fr]
+  title    = "Documentation — Roxabi Factory"
+  desc     = "Documentation Roxabi Factory — guides d'architecture, modèle d'outils, roadmap de construction et l'histoire derrière le moteur. Sans détour, publique, organisée par tags."
+  og_title = "Documentation — Roxabi Factory"
+  og_desc  = "Guides d'architecture, modèle d'outils, roadmap et l'histoire derrière le moteur Factory. Organisée par tags."
+  crumb    = "Documentation"
+
+[[page]]
+id          = "legal"
+path        = "legal/"
+body        = "legal"
+og_type     = "website"
+footer      = "full"
+shader      = false
+active      = ""
+jsonld      = "breadcrumb"
+ancestors   = ["home"]
+changefreq  = "yearly"
+priority    = "0.3"
+  [page.en]
+  title    = "Legal notice — Roxabi Factory"
+  desc     = "Legal notice for factory.roxabi.dev: publisher, hosting, intellectual property, and privacy. No analytics, no tracking cookies."
+  og_title = "Legal notice — Roxabi Factory"
+  og_desc  = "Publisher, hosting, intellectual property, and privacy for factory.roxabi.dev."
+  crumb    = "Legal notice"
+  [page.fr]
+  title    = "Mentions légales — Roxabi Factory"
+  desc     = "Mentions légales de factory.roxabi.dev : éditeur, hébergeur, propriété intellectuelle et données personnelles. Aucune analytique, aucun cookie de suivi."
+  og_title = "Mentions légales — Roxabi Factory"
+  og_desc  = "Éditeur, hébergeur, propriété intellectuelle et données personnelles de factory.roxabi.dev."
+  crumb    = "Mentions légales"
+
+# ── Documentation entries (collection="documentation"). Index page above. ──────
+# Each entry carries `tags` (organizing axis); the index groups & filters by tag.
+# Manifest order = reading order: factory-roadmap, tool-architecture, architecture, atelier-lyra.
+# Bodies authored from factory/docs and factory/artifacts sources.
+
+[[page]]
+id          = "doc-factory-roadmap"
+path        = "documentation/factory-roadmap/"
+body        = "doc-factory-roadmap"
+version     = "1.1"
+updated     = "2026-06-03"
+og_type     = "article"
+footer      = "full"
+shader      = false
+active      = "docs"
+jsonld      = "techarticle"
+collection  = "documentation"
+tags        = ["Factory"]
+ancestors   = ["home", "documentation"]
+changefreq  = "monthly"
+priority    = "0.6"
+  [page.en]
+  title      = "Roxabi Factory — Roadmap and Architecture — Roxabi Factory"
+  desc       = "An agent engine extended with a jobs layer: the architecture choices — worker vs tool, a five-layer tool model, domains by nature — and the build roadmap."
+  og_title   = "Roxabi Factory — Roadmap and Architecture"
+  og_desc    = "Worker vs tool, a five-layer tool model, domains by nature, value before framework — the choices behind the Roxabi Factory and the order we build them in."
+  crumb      = "Factory Roadmap"
+  card_title = "The Roxabi Factory"
+  card_desc  = "An agent engine extended with a jobs layer — the architecture choices (worker vs tool, five tool layers, domains by nature) and the order we build them in."
+  [page.fr]
+  title      = "Roxabi Factory — Roadmap et architecture — Roxabi Factory"
+  desc       = "Un moteur d'agents étendu d'une couche jobs : worker vs outil, un modèle d'outils à cinq couches, des domaines par nature, et la roadmap de construction."
+  og_title   = "Roxabi Factory — Roadmap et architecture"
+  og_desc    = "Worker vs outil, un modèle d'outils à cinq couches, des domaines par nature, la valeur avant le framework — les choix derrière la Roxabi Factory."
+  crumb      = "Roadmap Factory"
+  card_title = "La Roxabi Factory"
+  card_desc  = "Un moteur d'agents étendu d'une couche jobs — les choix d'architecture (worker vs outil, cinq couches d'outils, domaines par nature) et l'ordre de construction."
+
+[[page]]
+id          = "doc-tool-architecture"
+path        = "documentation/tool-architecture/"
+body        = "doc-tool-architecture"
+version     = "1.0"
+updated     = "2026-06-03"
+og_type     = "article"
+footer      = "full"
+shader      = false
+active      = "docs"
+jsonld      = "techarticle"
+collection  = "documentation"
+tags        = ["Tools"]
+ancestors   = ["home", "documentation"]
+changefreq  = "monthly"
+priority    = "0.6"
+  [page.en]
+  title      = "Tool Architecture — Roxabi Factory"
+  desc       = "The five-layer tool model at the heart of Roxabi Factory — how capabilities are classified by domain and nature, the vocabulary of tools vs workers, and the provider contract that wires it all together."
+  og_title   = "Tool Architecture — Roxabi Factory"
+  og_desc    = "Five layers, domain-nature taxonomy, the tool vs worker distinction, and the provider contract — the model that defines how capabilities plug into the Factory."
+  crumb      = "Tool Architecture"
+  card_title = "Tool Architecture"
+  card_desc  = "Five layers, domain-nature taxonomy, the tool vs worker distinction, and the provider contract — the model that defines how capabilities plug into the Factory."
+  [page.fr]
+  title      = "Architecture des outils — Roxabi Factory"
+  desc       = "Le modèle d'outils à cinq couches au cœur de Roxabi Factory — comment les capacités sont classifiées par domaine et nature, le vocabulaire outils vs workers, et le contrat provider qui relie tout."
+  og_title   = "Architecture des outils — Roxabi Factory"
+  og_desc    = "Cinq couches, taxonomie domaine-nature, la distinction outil vs worker, et le contrat provider — le modèle qui définit comment les capacités se branchent sur la Factory."
+  crumb      = "Architecture des outils"
+  card_title = "Architecture des outils"
+  card_desc  = "Cinq couches, taxonomie domaine-nature, la distinction outil vs worker, et le contrat provider — le modèle qui définit comment les capacités se branchent sur la Factory."
+
+[[page]]
+id          = "doc-architecture"
+path        = "documentation/architecture/"
+body        = "doc-architecture"
+version     = "1.0"
+updated     = "2026-06-03"
+og_type     = "article"
+footer      = "full"
+shader      = false
+active      = "docs"
+jsonld      = "techarticle"
+collection  = "documentation"
+tags        = ["Architecture"]
+ancestors   = ["home", "documentation"]
+changefreq  = "monthly"
+priority    = "0.6"
+  [page.en]
+  title      = "Architecture — Roxabi Factory"
+  desc       = "The hexagonal core, hub-and-spoke topology, NATS message bus, isolated agent pools, and the jobs layer — the full architectural picture of Roxabi Factory distilled from its domain pages."
+  og_title   = "Architecture — Roxabi Factory"
+  og_desc    = "Hexagonal core, hub-and-spoke over NATS, isolated agent pools, and the jobs layer — the full architectural picture of the Factory."
+  crumb      = "Architecture"
+  card_title = "Architecture"
+  card_desc  = "Hexagonal core, hub-and-spoke over NATS, isolated agent pools, and the jobs layer — the full architectural picture of the Factory, distilled from its domain pages."
+  [page.fr]
+  title      = "Architecture — Roxabi Factory"
+  desc       = "Le cœur hexagonal, la topologie hub-and-spoke, le bus de messages NATS, les pools d'agents isolés et la couche jobs — l'image architecturale complète de Roxabi Factory distillée depuis ses domain pages."
+  og_title   = "Architecture — Roxabi Factory"
+  og_desc    = "Cœur hexagonal, hub-and-spoke sur NATS, pools d'agents isolés et couche jobs — l'image architecturale complète de la Factory."
+  crumb      = "Architecture"
+  card_title = "Architecture"
+  card_desc  = "Cœur hexagonal, hub-and-spoke sur NATS, pools d'agents isolés et couche jobs — l'image architecturale complète de la Factory, distillée depuis ses domain pages."
+
+[[page]]
+id          = "doc-atelier-lyra"
+path        = "documentation/atelier-lyra/"
+body        = "doc-atelier-lyra"
+version     = "1.0"
+updated     = "2026-06-03"
+og_type     = "article"
+footer      = "full"
+shader      = false
+active      = "docs"
+jsonld      = "techarticle"
+collection  = "documentation"
+tags        = ["Story"]
+ancestors   = ["home", "documentation"]
+changefreq  = "monthly"
+priority    = "0.6"
+  [page.en]
+  title      = "The Atelier — Roxabi Factory"
+  desc       = "The long-form story of how a tool-system with 493 articulations became a production agent fleet — and why the distinction between tools and workers matters more than it first appears."
+  og_title   = "The Atelier — Roxabi Factory"
+  og_desc    = "How 493 tool-system articulations became a production fleet — the long-form story of the Factory's design, in the voice of the forge."
+  crumb      = "The Atelier"
+  card_title = "The Atelier"
+  card_desc  = "The long-form story of how a tool-system with 493 articulations became a production fleet — why the distinction between tools and workers matters."
+  [page.fr]
+  title      = "L'Atelier — Roxabi Factory"
+  desc       = "Le récit long format de comment un système d'outils à 493 articulations est devenu une flotte d'agents en production — et pourquoi la distinction entre outils et workers compte plus qu'il n'y paraît."
+  og_title   = "L'Atelier — Roxabi Factory"
+  og_desc    = "Comment 493 articulations d'un système d'outils sont devenues une flotte en production — le récit long de la conception de la Factory, dans la voix de la forge."
+  crumb      = "L'Atelier"
+  card_title = "L'Atelier"
+  card_desc  = "Le récit long de comment un système d'outils à 493 articulations est devenu une flotte en production — pourquoi la distinction outils vs workers compte."

@@ -1,0 +1,209 @@
+<main>
+<section class="doc-hero">
+  <div class="wrap">
+    <p class="section-label">ARCHITECTURE &amp; STORY</p>
+    <h1>The Workshop — Lyra's Tool Architecture</h1>
+    <p class="lead prose" style="margin:var(--s-md) auto 0">A long-form narrative tour of the Roxabi Factory tool system — from the five-layer panorama down to a single message travelling from keyboard to reply.</p>
+    <div class="doc-hero-tags">{{doc_tags}}</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap constitution">
+    <nav class="toc" aria-label="Sections">
+      <span class="t">Sections</span>
+      <a href="#sec-1">1 — Why We Are Here</a>
+      <a href="#sec-2">2 — The Panorama</a>
+      <a href="#sec-3">3 — The Harness</a>
+      <a href="#sec-4">4 — The Agent as an Instance</a>
+      <a href="#sec-5">5 — Four Tool Layers</a>
+      <a href="#sec-6">6 — Worker Is Not Tool</a>
+      <a href="#sec-7">7 — The Invisible Boundary</a>
+      <a href="#sec-8">8 — Shared Contracts</a>
+      <a href="#sec-9">9 — How Data Flows</a>
+      <a href="#sec-10">10 — The Pulse</a>
+      <a href="#sec-11">11 — Locks and Keys</a>
+      <a href="#sec-12">12 — Following a Message</a>
+      <a href="#sec-13">13 — The Horizon</a>
+    </nav>
+
+    <div class="const-body prose">
+
+      <div class="titre" id="sec-1">
+        <span class="label">01</span>
+        <h2>Why We Are Here</h2>
+        <p>Before pushing the door open, take a moment to look at the current state of things. For several months now we have been talking about tools. We have built them, taken them apart, redesigned them. In every conversation, the word <em>tool</em> has slipped from one reality to another: sometimes a Python function an agent invokes directly, sometimes a NATS service running in the background on a different machine, sometimes a Quadlet sidecar waiting for requests, sometimes a skill the model learns to orchestrate without even knowing it is doing so. Four design spaces have been living side by side without quite speaking to each other.</p>
+        <p>It is like a workshop where four craftspeople work in the same room, each at their own bench, each with their own dialect for naming the same objects. As long as everyone stays in their corner, it holds. But the day one of them asks the other for a hammer, you discover they are not pointing at the same thing.</p>
+        <p>What follows is the floor plan of the workshop. Not a new drawing — just the clean version of what already exists, reframed so we speak with one voice. We will climb to the mezzanine, take in the whole view, come back down object by object, open the doors, follow the flows, examine the locks. By the end you should be able to pick up any piece and know precisely where it belongs, what it touches, and what it is for.</p>
+        <div class="callout"><p>This text invents nothing. It puts upright what already exists — a common language, from built-in to sub-agent, without drift.</p></div>
+      </div>
+
+      <div class="titre" id="sec-2">
+        <span class="label">02</span>
+        <h2>The Panorama</h2>
+        <p>Come up to the mezzanine with me, two metres above the floor. From here the workshop reads as five stacked layers. Not five rooms side by side — five layers resting one on top of the other, like a geological cross-section. Each layer rests on the one before it; each layer serves the one that follows.</p>
+        <p>At the very bottom, the identity layer. This is where the marks are laid — who this agent is, which group it belongs to, which tools it has the right to touch. This layer is physical: it materialises as configuration files on disk, as authentication keys mounted like slipping a key into a safe, as named volumes that partition the territory. Without this layer, nothing has identity; everything floats.</p>
+        <p>Just above, the harness layer. The harness is the living envelope that contains the agent's loop. It takes the prompt, passes it to the model, catches the tool requests, executes them, returns the results to the model, and repeats — until the agent says <em>I am done</em>. The harness holds only one thing at a time: the memory of the current turn. Everything else — the long history, shared data, heavy files — lives elsewhere.</p>
+        <p>Higher still, the tool layer. This is the shelf where the agent comes to pick what it needs. Four categories of tool sit on that shelf side by side: tools that fit directly in the harness's hand, tools it calls at a distance by message, tools that chain several others into a deterministic sequence, and tools that are in reality other nested harnesses. We will come back to this in detail — it is the densest section.</p>
+        <p>Above that, the shared contracts layer. This is the common language. Every piece of the workshop imports these contracts: the definition of what a <em>tool</em> is, the shape of a <em>result</em>, the structure of a <em>manifest</em>. Without this layer, every craftsperson falls back into their own dialect — and that is exactly what we are in the process of correcting.</p>
+        <p>And at the very top, the model. It looks over everything from above. It only sees the surface: the list of tools handed to it, their descriptions, their parameters. It does not know, and does not need to know, that one tool sits in the harness's palm while another is ten metres away at the end of a cable. For the model, it is the same handle.</p>
+        <div class="callout"><p>Five layers, readable bottom to top. Each does one thing, does not overflow its boundary, and rests cleanly on the next.</p></div>
+      </div>
+
+      <div class="titre" id="sec-3">
+        <span class="label">03</span>
+        <h2>The Harness</h2>
+        <p>Come back down. Push this door — the one in the middle, marked <em>harness</em>. This is where the agent lives when it thinks.</p>
+        <p>Inside, it is surprisingly simple. At the centre of the room, a loop. The harness receives a complete prompt, sends it to the model, waits for the response, looks at what the model is asking it to do. If the model wants a tool, the harness goes and fetches it from the shelf, waits for the result, gives it back to the model, and the loop continues. It turns until the model decides there is nothing more to do — what it calls an <code>end_turn</code>. At that moment the loop closes, the harness yields control, and the turn is over.</p>
+        <p>While the loop is turning, the harness holds only one thing in hand: the memory of the current turn. Which tools it has already called, which results it has already received, at what stage of the conversation it stands. This memory is deliberately ephemeral. Once the turn ends, it is discarded. The harness keeps nothing.</p>
+        <p>This matters because we often confuse the roles. Everything that must survive the turn lives elsewhere. The long conversation history is stored by the hub, which knows who spoke to whom and when. Heavy artefacts — images, audio files, everything that weighs — are deposited in the blobstore, and only their references travel. The durable knowledge of an agent — its notes, preferences, traces — lives in its own volume on disk. The harness, by design, is amnesiac. That is precisely what makes it interchangeable.</p>
+        <p>There is one other dimension to understand: there is only one harness binary. One. The same container image, the same code, everywhere. What differs from one agent to another is never the harness code — it is the configuration at instantiation time. Same body, different identities.</p>
+      </div>
+
+      <div class="titre" id="sec-4">
+        <span class="label">04</span>
+        <h2>The Agent as an Instance</h2>
+        <p>How does that single harness become five distinct agents? This is where we touch the most elegant pattern in the whole architecture.</p>
+        <p>Quadlet — the Podman tool that manages our containers under systemd — natively supports a notion called the <em>instance template</em>. In practice, you drop a <code>.container</code> file with an at-sign in its name: <code>factory-agent@.container</code>. That is not a functional container per se — it is a mould.</p>
+        <p>When you want an agent to come alive, you tell systemd to start <code>factory-agent@telegram.service</code>. systemd reads the mould, replaces the at-sign with <em>telegram</em> wherever it appears, and produces a concrete instance. The mounted volume is no longer <code>~/.roxabi/factory/agents/</code> — it is <code>~/.roxabi/factory/agents/telegram/</code>. The environment file is no longer <code>env/.env</code> — it is <code>env/telegram.env</code>. The NATS secret is no longer <code>factory-nats-</code> — it is <code>factory-nats-telegram</code>. Everything resolves cleanly from the at-sign.</p>
+        <p>If tomorrow you want a Discord agent, a GitHub bot agent, a personal assistant agent, you start <code>factory-agent@discord.service</code>, <code>factory-agent@gh-bot.service</code>, <code>factory-agent@assistant.service</code>. Each instance uses the same image, the same harness binary, but inhabits an isolated territory. Its own list of authorised tools. Its own system prompt. Its own secrets. Its own data on disk.</p>
+        <p>The image to hold onto is the madeleine mould. One mould, several impressions, each unique but baked in the same oven with the same batter. The isolation is physical: one agent cannot read another's volumes, cannot sign with another's key, cannot impersonate another. But you do not pay for binary duplication. One harness to maintain for all; a distinct identity for each one.</p>
+        <div class="callout"><p>Everything that truly decides what an agent can do — its persona, its tool list, its model, its tone — lives in the environment file, on disk, versioned in git, auditable by anyone who opens the repo. Readable, traceable, revocable with one commit.</p></div>
+      </div>
+
+      <div class="titre" id="sec-5">
+        <span class="label">05</span>
+        <h2>Four Tool Layers</h2>
+        <p>On these two primitives — the looping harness and the message bus — we can now set the tools. And this is where the architecture becomes genuinely interesting, because it is at once simple on the surface and stratified in depth.</p>
+        <p>Come close to the shelf for a moment. What you see is a row of objects that look alike. Each one has a name, a description, a parameter outline. For the agent reaching out, they are interchangeable in gesture: it grasps the name, passes the arguments, waits for the result. But if you turn one of them over and look underneath, you discover that the transport varies completely from tool to tool. This is what I call the uniform surface over a heterogeneous base — and it is the heart of what you need to understand in this section.</p>
+        <p><strong>L0a — what fits in the palm.</strong> The first layer, L0a, is the bottom of the shelf. These are the built-in tools, compiled directly into the harness binary. When the model decides to run <code>bash</code>, or read a file, or call <code>web_fetch</code>, or publish on a NATS subject, or invoke the <code>gh</code> tool — there is no discovery, no network call, no IPC. The code executes in the same process, alongside the dispatcher, in shared memory. Latency is near zero. You hold the tool in your palm, literally. This group is deliberately small: <code>bash</code>, <code>file_read</code>, <code>file_write</code>, <code>web_fetch</code>, <code>nats_publish</code> and <code>gh</code>. Six primitives. Each does one thing and does it fast.</p>
+        <p><strong>L0b — what is within reach of the wire.</strong> One step further along the shelf, you find L0b. To the eye, these tools are identical to the previous ones: same name, same description, same parameter shape. The agent's hand grasps them exactly the same way. But the difference is under the surface, in the transport. L0b groups the remote tools — voice (its two faces: TTS and STT), image generation, the LLM, Postiz, XCLI. Each of these tools lives in its own process, often in its own Quadlet on a separate machine. To reach them, the harness sends a message on a NATS subject. It waits for the reply. The result travels over the network before it lands. And here is the point worth hammering: the model never sees the difference between L0a and L0b. Ever. For it, <code>bash</code> and <code>voice.tts</code> have exactly the same weight, the same texture. The transport — in-process or via NATS — is handled in silence beneath the surface.</p>
+        <p><strong>L1 — the choreographed sequence.</strong> Go up one level. L1 is what we call a macro tool. It is always presented as a single tool to the agent — one handle, one name, one description. But behind it, it executes a deterministic sequence of lower-level tools without ever going back through the model between steps. Take the concrete example that crystallises this best: <code>vault.add_from_url</code>. Give it a URL, and it does three things in order — fetches the page (<code>scrape</code>, an L0b call), summarises it (<code>llm.summarize</code>, another L0b), stores the result in the vault (<code>vault.add</code>, L0a). Three steps, one visible gesture from the outside. The agent does not have to orchestrate these steps itself; it delegates the sequence to the macro tool, which runs it deterministically. The chain is coded, tested, reproducible. The model delegates the choreography to something more reliable than itself for this specific task.</p>
+        <p><strong>L2 — the partition slipped into the prompt.</strong> L2 is of a different nature. It is no longer a tool invoked at runtime. It is an instruction injected into the system prompt before the conversation even begins. A skill — in the <code>SKILL.md</code> format, following the Anthropic convention — is a score. It does not add a new tool to the list; it teaches the model how to chain the L0 and L1 tools that already exist, within a particular domain. A skill for vault management tells it how to combine <code>web_fetch</code>, <code>vault.add_from_url</code>, and a series of checks without those rules needing to be stated each turn. The logic is laid down once, upstream, in the text of the prompt. To the agent, L2 is invisible as a distinct layer. It simply thinks better in that domain.</p>
+        <p><strong>L3 — a harness calling another harness.</strong> At the very top of the shelf, where the objects weigh the most, sits L3. The sub-agent. Again, the agent parent sees a handle, a description, parameters. But when it grasps this tool, what it triggers is a complete second harness — with its own turn loop, its own context, its own set of tools. This child harness works in isolation, accumulates its own traces, returns a result and stops. The parent sees only the final summary. It perceives neither the depth of the recursion, nor the number of turns the child required, nor the tools the child called along the way. This is the most powerful and most costly layer. Reserved for tasks that truly merit their own workspace — long investigations, multi-file code refactors, analyses that themselves mobilise a palette of tools.</p>
+        <figure class="doc-figure">
+          <svg viewBox="0 0 720 380" role="img" aria-label="The four tool layers from built-in atomic at the base to recursive sub-agent at the top, all dispatched uniformly." style="width:100%;height:auto">
+            <defs><marker id="al-arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="var(--accent)"/></marker></defs>
+            <text x="26" y="190" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.12em" fill="var(--text-dim)" transform="rotate(-90 26 190)">COMPOSITION ↑</text>
+            <rect x="120" y="20" width="470" height="60" rx="8" fill="var(--accent)"/>
+            <text x="142" y="46" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--accent-on)">L3 — Sub-agent</text>
+            <text x="142" y="64" font-family="var(--font-mono)" font-size="10" fill="var(--accent-on)">nested isolated harness · returns a summary upward</text>
+            <rect x="120" y="94" width="470" height="60" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="142" y="120" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L2 — Skill</text>
+            <text x="142" y="138" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">instruction in the system prompt · teaches domain sequencing</text>
+            <rect x="120" y="168" width="470" height="60" rx="8" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="142" y="194" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L1 — Macro</text>
+            <text x="142" y="212" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">deterministic chain of primitives · no second model pass</text>
+            <rect x="120" y="242" width="470" height="60" rx="8" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.4"/>
+            <text x="142" y="268" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L0b — Remote atomic</text>
+            <text x="142" y="286" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">satellite on the NATS bus · heartbeat-discovered</text>
+            <rect x="120" y="316" width="470" height="48" rx="8" fill="var(--panel)" stroke="var(--border-hi)" stroke-width="1.4"/>
+            <text x="142" y="338" font-family="var(--font-mono)" font-size="13" font-weight="700" fill="var(--text)">L0a — Built-in atomic</text>
+            <text x="142" y="354" font-family="var(--font-mono)" font-size="10" fill="var(--text-muted)">compiled in-process · always available</text>
+            <line x1="624" y1="364" x2="624" y2="30" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#al-arr)"/>
+            <text x="642" y="200" text-anchor="middle" font-family="var(--font-mono)" font-size="10" letter-spacing="0.08em" fill="var(--text-muted)" transform="rotate(90 642 200)">UNIFORM DISPATCH</text>
+          </svg>
+          <figcaption>Four layers, one dispatcher. From a built-in primitive to a recursive sub-agent, every tool passes the same access-control gate and returns the same result type — only the transport changes underneath.</figcaption>
+        </figure>
+        <p>Step back and look at this shelf as a whole. All four layers have the same visible outline for the model: a name, a prose description, a JSON parameter schema. The model has no sensor to distinguish what will run in memory from what will cross the network. The abstraction is total on the model side; the complexity is entirely carried by the dispatcher — that silent switchboard that reads the tool type, checks the rights, validates the schema, and decides the transport without consulting the model.</p>
+      </div>
+
+      <div class="titre" id="sec-6">
+        <span class="label">06</span>
+        <h2>Worker Is Not Tool</h2>
+        <p>Before going further, there is a distinction the architecture defends carefully — because confusing it costs dearly in deployment and in mental clarity: a worker is not a tool.</p>
+        <p>Look at the hands. When a carpenter hands over a hammer, you do not confuse the hand and the hammer. The hand is what holds, selects, makes available. The hammer is what you grasp to strike. A worker is the hand. Tools are the objects it holds out.</p>
+        <p>Take imageCLI as a concrete example, because it makes the thing very tangible. imageCLI is a single worker — a single deployed unit, a single process running backstage. And yet it exposes several distinct tools: generate an image, list available engines, cancel an ongoing generation. Three different gestures, three objects in the hand. But one hand. The model, when it decides to act, never sees the worker. It sees the tool — the object held out, not the hand holding it. The worker stays backstage, invisible to the model, silent behind the curtain.</p>
+        <p>This distinction has a very concrete consequence at deployment time. You do not deploy one container unit per tool — that would be absurd, like ordering a whole workshop for each wrench. You deploy one unit per worker: one Quadlet <code>.container</code> file, one systemd service, one thing to start, monitor, restart. One worker, several tools, one unit. The granularity of deployment is that of the worker, never that of the tool. If imageCLI gains a fourth tool tomorrow — say, inspecting the metadata of a generation — nothing changes in the infrastructure: the hand is already there, it simply holds out one more object.</p>
+        <div class="callout"><p>The model sees a clean surface. The backstage is neat. A worker, not a tool — one unit, many tools, deployed once.</p></div>
+      </div>
+
+      <div class="titre" id="sec-7">
+        <span class="label">07</span>
+        <h2>The Invisible Boundary</h2>
+        <p>There remains a tension to resolve, and it is less obvious than the previous one. Some tools are built-in — they live in the harness binary, under the palm, ready to respond without any network round-trip. Others are remote — they wait at the end of a NATS subject, behind a worker that might be running on another machine. These two categories might seem to deserve different treatment. The engineering instinct says: two paths, two switchboards, one logic per type.</p>
+        <p>The Factory says no.</p>
+        <p>The dispatcher — the switchboard that executes tools — is uniform. When a built-in tool is called, and when a remote tool is called, the invocation gesture on the agent side is rigorously identical. Same access control, same result format, same visible surface for the model. Only the transport changes underneath: one executes in memory, the other goes over the network. But this difference is a plumbing detail, not a surface distinction. The agent does not know, and does not need to know, whether the tool it just invoked was under its palm or at the other end of the line.</p>
+        <p>This approach draws from two reference points: Claude Code, which normalises tools behind a stable interface regardless of origin, and smolagents, which pushes the same idea — one tool registry, one execution path. The common point between both is that they recognised the internal/external boundary is real for infrastructure — deployment, latency, observability — but must not surface to the model's cognitive layer.</p>
+        <p>The rejected alternative is what Codex CLI does: built-in and external go through two separate paths, two switchboards, two pipelines. That seems logical at first glance. But it means two security pipelines, two entry points for access rules that can potentially diverge, twice the error surface to maintain. When a rule changes, you change it in two places. When an audit runs, it must cover both paths. The cost accumulates silently, and you only really see it when the two pipelines start to drift apart.</p>
+      </div>
+
+      <div class="titre" id="sec-8">
+        <span class="label">08</span>
+        <h2>Shared Contracts</h2>
+        <p>What makes the uniform dispatcher possible is not magic: it is a common floor, poured under everyone's feet before the first tool was ever written.</p>
+        <p>This floor is made of two slabs, each with its own role.</p>
+        <p>The first is <code>roxabi-contracts</code>. It is a contracts module, a sub-package of the workspace that lives in <code>packages/roxabi-contracts/</code>. It carries the type definitions that all tools import: the definition of a TTS request, the structure of an image response, the schema of a unified error, the NATS subjects that serve as official names on the network. Every tool that wants to speak to the Factory draws from this same registry, hub side and satellite side alike. A field renamed in the contracts immediately becomes a type error in both camps — the silent disagreement between a writer and a reader, that classic trap, is transformed into a visible error before the code ever runs. The contracts also carry behavioural hints: this tool is read-only, that one is idempotent, this other is destructive. The hub reads them to decide how to behave in the face of a failure.</p>
+        <p>The second slab is <code>roxabi-nats</code>, the other sub-package, in <code>packages/roxabi-nats/</code>. Here lives the plumbing: the adaptor that plugs a tool into the NATS network, the middleware that propagates the agent's identity all along the path, the registry client that keeps an up-to-date list of live workers via regular heartbeats. This is pure transport, with no knowledge of Factory subjects or business domains. It does not know what it carries. It only knows how to carry it safely.</p>
+        <p>Two distinct bricks for two distinct reasons. Contracts evolve when a domain changes shape — a new request, a new field. Transport evolves when the network mechanics change. Mixing them in a single package would force satellites to take plumbing updates every time a voice contract gets a new field, and vice versa.</p>
+        <div class="callout"><p>Without this floor, every satellite rewrites the same twenty lines. The N×M drift — the number of hub-satellite pairs multiplying the surface of potential disagreement — is addressed at the root. One shared source, imported by all.</p></div>
+      </div>
+
+      <div class="titre" id="sec-9">
+        <span class="label">09</span>
+        <h2>How Data Flows</h2>
+        <p>Now that the floor holds, look at how data moves through this workshop. It is not a single stream — it is several distinct watercourses, each shaped for what it carries.</p>
+        <p>The territory on disk is organised in three levels of isolation. There is first what is shared read-only across several tools: HuggingFace model weights, for example, which cost dearly to download and have no reason to exist twice on the same machine. One copy, multiple consumers. Then what belongs to a specific tool, set in <code>~/.roxabi/&lt;tool&gt;/</code> — its own space, its desk, its working data. Inside that space, an <code>agents/&lt;id&gt;/</code> sub-directory isolates each agent's memory individually. Three levels of nesting: the shared, the tool-specific, the agent-specific. Each has its reason to exist; each has its boundary.</p>
+        <p>For heavy artefacts — audio files generated by voice synthesis, images produced by imageCLI, incoming attachments from messaging platforms — there is the blobstore. It is a dedicated HTTP service, <code>factory-blobstore</code>, running on the hub machine in its own Quadlet container, listening on port 8449. Think of it as the workshop attic: you deposit bulky things there and return with a label. That label is a reference — a URL, a content identifier — that travels in NATS messages in place of the raw bytes. The raw bytes never traverse the message network. The NATS message says "the audio file is over there"; it does not carry it. This principle holds for voiceCLI, for imageCLI, for any tool that produces or consumes weighty artefacts.</p>
+        <p>The durable session memory lives elsewhere again. It rests in a key-value store hosted on JetStream — the persistent message bus that underpins NATS. This is the safe: what is deposited there survives a hub restart, an adapter reconnection, a brief network outage. The conversation does not fall if the process falls.</p>
+        <p>The harness holds only one thing: the memory of the current turn. What the agent is currently doing, the context of that single interaction. Once the turn is complete, this memory is discarded. Ephemeral by design, so as not to accumulate what no longer needs to be held.</p>
+        <div class="callout"><p>The golden rule: NATS for small structured messages that must travel fast; the blobstore for what weighs and does not deserve to clog the message network; JetStream KV for what must survive between sessions. Three watercourses, three natures of data, three destinations.</p></div>
+      </div>
+
+      <div class="titre" id="sec-10">
+        <span class="label">10</span>
+        <h2>The Pulse</h2>
+        <p>You have seen the watercourses — NATS for structured messages, the blobstore for heavy artefacts, JetStream for what must survive. But these watercourses do not flow in silence. There is a rhythm beneath all of it, a regular pulse running along the pipes that you can feel under your fingertips if you know where to rest your hand.</p>
+        <p>This rhythm is the heartbeat. Each remote tool — the voice synthesis worker, the image worker, the LLM worker — publishes at regular intervals a pulse on a dedicated subject: <code>factory.voice.tts.heartbeat</code>, <code>factory.llm.heartbeat</code>, <code>factory.image.heartbeat</code>. This is not a declaration, not a report — just the pulse, the fine wave you see passing through the registry of live workers. The hub catches it, notes it, updates its map. As long as the wave arrives, the worker is there. If it stops, the silence itself is information.</p>
+        <p>The main flow of work follows another path. When the hub wants to run a model, it deposits its request on <code>factory.llm.generate.request</code>. When it wants to synthesise voice, it pushes to <code>factory.voice.tts.request</code>. The request heads toward the appropriate worker, and the reply comes back via a personal inbox — what NATS calls an inbox, a reply address slipped inside the request that the worker uses to send its result directly back to the caller. The pattern is called request-reply: one question, one answer, one clean and traceable round trip. No blind broadcast, no polling loop.</p>
+        <p>For the harness — the execution loop that drives agent turns — the same principle holds. It publishes its request on <code>factory.harness.turn.request</code>; the hub listens, receives the wave, takes over. A named subject, a known address, a kept convention.</p>
+        <p>There is one more thing to see. When an agent wants to know how to use a tool — what parameters, what API, what it accepts as input — it does not need to consult external documentation. NATS Micro exposes a discovery convention under the <code>$SRV.INFO</code> prefix. The agent sends a request; the tool's manifest comes back on demand. Nothing static, nothing compiled in advance. The topology is live, and you can read it by touching it.</p>
+        <div class="callout"><p>One protocol for what flows fast and light; one for what weighs. HTTP appears at one point only — the blobstore. Everything else travels by NATS subjects.</p></div>
+      </div>
+
+      <div class="titre" id="sec-11">
+        <span class="label">11</span>
+        <h2>Locks and Keys</h2>
+        <p>Now that we have seen the wave, look at the passages. Not everyone can go everywhere in this workshop. There are doors, locks, keys — and they are placed carefully, because negligence here has a visible cost.</p>
+        <p>The first decision is the grain of identity. You could give a key to each agent — one NATS account per agent, one NKey per instantiated model. With ten agents in circulation, that would mean ten locks to cut, distribute, and revoke. Disproportionate for a marginal gain. The choice is different: one identity per role. The hub has its key. The voice-TTS worker has its own. The image worker has its own. Infrastructure roles — stable, countable, administrable by hand if needed.</p>
+        <p>The key itself — the NKey, that cryptographic signature that proves you are who you say you are — is stored as a Podman secret, mounted as a file in the container via a tmpfs. <code>type=mount</code>, in Quadlet parlance. Never an environment variable, never a value in a variable that any sub-process could read by inspecting its own environment. The file is placed at a precise location, read at startup, and that is that. The key does not travel — it is stored in its safe and used in place.</p>
+        <p>The identity of the calling agent, on the other hand, travels differently. It is not the network key that carries it, not a protocol header that NATS would read and interpret. It is a field in the JSON body of the message, an <code>agent_id</code> field slipped into the contract envelope. This choice has a precise reason: touching the transport layer to inscribe application-level information creates a coupling that is hard to evolve. The JSON body belongs to the application layer — it can be evolved, versioned, extended according to contract versioning rules. The caller's identity stays where it is readable by those who need it, without clouding the plumbing.</p>
+        <p>The last piece of this mechanism is the entry rule. Everything is forbidden by default — this is the deny-first principle, visible in the <code>auth.conf</code> file: <code>default_permissions</code> with <code>deny: [&quot;&gt;&quot;]</code> on both publish and subscribe. Nothing passes except what has been explicitly opened. The hub can publish on outbound subjects, listen to heartbeats, respond to incoming requests. The TTS worker can publish its pulse, listen to requests addressed to it, send its responses. Nothing more. This permission is set at the moment the agent is instantiated — not at call time, not on the fly. It is inherited from Claude Code's discipline, which opens rights explicitly at creation and does not revise them in the middle of a run.</p>
+        <p>What guarantees this rule holds is where the verification is implemented. There is not a copy of this logic in each tool, not a reimplementation per satellite. There is one place — the SDK library, the <code>roxabi-nats</code> whose role we saw in the previous section. One lock code, one place to audit, one place to update the logic if the permission model evolves. Tools trust the library to set the right lock. They do not have to build it themselves.</p>
+      </div>
+
+      <div class="titre" id="sec-12">
+        <span class="label">12</span>
+        <h2>Following a Message</h2>
+        <p>We have spent the previous sections examining locks and keys — who can enter, who cannot, how credentials travel from an environment file to the precise moment a door opens or stays shut. But a workshop is only truly understood by watching the material work. So follow a message, from the first gesture to the reply.</p>
+        <p>You open Telegram. You write something. You press enter.</p>
+        <p>At the other end of the line, the <code>factory-telegram</code> adapter is listening. It catches the message — username, conversation identifier, raw text — and reformats it into an event it publishes on the NATS bus. This is not yet a decision: it is a translation. The adapter does not know what the message means; it only knows how to shape it and push it toward the hub.</p>
+        <p>The hub receives the event. It plays the role we have known from the beginning: it assembles the context, reconstructs the useful slice of history, decides who to route to. Then it publishes a turn request on the subject <code>factory.harness.turn.request</code> — a ticket that says, in substance: someone needs an agent turn; here is everything it needs.</p>
+        <p>The <code>factory-agent@telegram</code> instance was there, waiting in the queue. It catches the request. This is the harness mould's impression — the same structure, instantiated for this channel, with its own identity. It does not choose to respond; it is the worker the queue designates.</p>
+        <p>The harness composes the prompt. To do so, it reads the list of authorised tools for this agent, written in its environment file. This is exactly the lock we visited: the list says what this agent has the right to request, and not one tool more. Prompt assembled, the harness calls the model via the llmCLI worker that relays to the actual model.</p>
+        <p>The model examines the request and decides it needs to generate an image. It requests the <code>image.generate</code> tool.</p>
+        <p>The request leaves the model and falls into the dispatcher. The dispatcher is uniform — the same room for all tools, the one we saw earlier. It consults the SDK, which knows the path: this request goes via NATS Micro to the imageCLI worker. The message crosses the bus, arrives at the worker, and the image is generated.</p>
+        <p>Once generated, the image is deposited in the blobstore. And here something quiet happens: what comes back in the response is not the image itself — it is its reference, a <code>blob_ref</code>, a lightweight address that says where to find the thing without carrying the thing. The NATS wire does not carry megabytes; it carries pointers.</p>
+        <p>The harness receives this response and feeds it back to the model. This is the second turn of the loop. The model now sees that the image exists, that the request was satisfied, and it produces the text response — the sentence the user is waiting for.</p>
+        <p>The harness emits events toward the hub. The hub broadcasts to the Telegram adapter. The adapter pushes the reply to the user. Telegram displays the message.</p>
+        <p>A few seconds have elapsed. Every piece has played its note, at its moment, in one continuous flow. The adapter translated, the hub assembled, the harness orchestrated, the dispatcher routed, the worker produced, the blobstore received, the model looped. No piece knew how to do everything — each one knew exactly what it had to do.</p>
+        <div class="callout"><p>Understanding each role separately is what makes the full flow readable from end to end. This is the payoff of all the preceding sections.</p></div>
+      </div>
+
+      <div class="titre" id="sec-13">
+        <span class="label">13</span>
+        <h2>The Horizon</h2>
+        <p>We are now standing in the light of the threshold. Behind you, the workshop with all its pieces in place, its circuits you can follow with your eyes. In front of you, a few doors still closed — not walls, doors. It is honest to name them.</p>
+        <p>The first concerns the internal engine of the harness. Everything we have described — the loop, the turns, the tool handling — presupposes an engine that orchestrates these steps. But this engine is not yet chosen. LangGraph is on the table, bringing graph guarantees and resumption. A lightweight custom loop is also considered, simpler and more directly controllable. And Hermes — the Nous Research fork that lives in this ecosystem — could play this role. A prototype will decide. That is the right way to choose: you do not pick an engine on paper, you run it.</p>
+        <p>The second door is the skills layer — the <code>SKILL.md</code> partitions an agent can read to know when and how to call a tool. This layer will come, likely in the Anthropic format. But it is a next iteration, not the foundation.</p>
+        <p>The third is the question of sub-agents: a harness calling a harness, an instance delegating part of itself to another. The architecture is ready for it in broad strokes, because a stateless harness can nest without friction. But taking it on in the first version or deferring it to the next iteration — that ridge line remains to be crossed.</p>
+        <p>There is also a term that floated in a conversation one day: <em>lightpool</em>. Nobody knows exactly what it meant. Probably a confusion with clipool, the Claude process pool we know well. Perhaps an idea still taking shape. That mystery deserves to be cleared up before it becomes a false certainty in exchanges.</p>
+        <p>And there is the concrete, operational passage: moving from the current shared pool to the at-sign Quadlet instances — those named, isolated units, one per channel. The path is traced, but validating it on a prototype before rolling it out everywhere is the right precaution. You do not flip a production topology on an intuition, however well-founded.</p>
+        <p>These doors do not obscure what we have seen. They simply indicate where the walk continues.</p>
+        <p>A little while ago you entered this workshop through the main door — the hub, its NATS subjects, its adapters that translate the outside world. You walked through the tool forge, traced the dispatcher's wires, recognised the harness mould's impression in each instance, understood how locks distribute rights without concentrating them. And you followed a message, from the first gesture on a keyboard to the sentence that comes back in reply. The workshop is coherent. Not perfect, not finished, but coherent — and that is what matters for building on top of it.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+</main>
