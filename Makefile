@@ -20,7 +20,7 @@ serve: build
 deploy: build
 	@git diff --quiet || { echo "Error: dirty tree — commit changes before deploying"; exit 1; }
 	@echo "Deploying to Cloudflare Pages…"
-	npx wrangler pages deploy dist --project-name=roxabi-site --branch=main
+	npx wrangler pages deploy dist --project-name=factory-site --branch=main
 
 clean:
 	rm -rf dist
