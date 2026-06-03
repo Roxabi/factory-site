@@ -52,7 +52,7 @@ Conséquence : roxabi.dev garde le **détail canonique** de chaque outil ; facto
 | S12 | Postiz listé maintenant, badge « bientôt » | ✅ | — |
 | S13 | Base design : **récolter v17** dans le SSG | ✅ (b) | — |
 
-→ **Tout tranché (2026-06-03).** S7 = shader `ember-forge` inclus · S8 = full. Build lancé via workflow.
+→ **Tout tranché (2026-06-03).** S7 = shader `ember-forge` inclus · S8 = full. Build lancé via workflow — script archivé : [`docs/workflows/factory-site-build.js`](./workflows/factory-site-build.js) (`wf_05a4daec-9cf` · 3 phases · 11 agents : P1 manifest/chrome → P2 reskin ∥ 8 bodies → P3 build+QA).
 
 ---
 
