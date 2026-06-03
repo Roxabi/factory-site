@@ -24,8 +24,6 @@
     HEAT_HALF_RES: 2,
     HEAT_DIFFUSE: 0.92,
     HEAT_PARTICLE_STRENGTH: 0.15,
-    HEAT_MOUSE_RADIUS: 70,
-    HEAT_MOUSE_STRENGTH: 0.5,
 
     BUOYANCY: -0.016,
     TURBULENCE: 0.010,
@@ -35,7 +33,6 @@
     DIAMOND_HALF_H: 0.14,
     DIAMOND_REPEL_RADIUS: 1.2,
     DIAMOND_REPEL_FORCE: 0.28,
-    DIAMOND_RIM_BLUR: 16,
 
     BLAST_COUNT: 45,
     BLAST_SPEED: 4.0,
@@ -68,7 +65,6 @@
   // ── main shader ───────────────────────────────────────────
   function run(canvas, ctx) {
     var W = 0, H = 0, DPR = 1;
-    var mouse = { x: -9999, y: -9999, active: false };
     var frameId = null;
     var lastTime = 0;
     var diamond = { cx: 0, cy: 0, hw: 0, hh: 0 };
@@ -218,7 +214,6 @@
     }
 
     function updateHeatField() {
-      if (mouse.active) seedHeat(mouse.x, mouse.y, CFG.HEAT_MOUSE_STRENGTH, CFG.HEAT_MOUSE_RADIUS);
       for (var i = 0; i < particleCount; i++) {
         if (plife[i] > 0 && py[i] > 0 && py[i] < H) {
           var hx = Math.round(px[i] / CFG.HEAT_HALF_RES);
@@ -251,28 +246,9 @@
       heatCtx.putImageData(heatImgData, 0, 0);
     }
 
-    // ── diamond rim ────────────────────────────────────────
-    function buildDiamondPath(c) {
-      c.beginPath();
-      c.moveTo(diamond.cx,              diamond.cy - diamond.hh);
-      c.lineTo(diamond.cx + diamond.hw, diamond.cy);
-      c.lineTo(diamond.cx,              diamond.cy + diamond.hh);
-      c.lineTo(diamond.cx - diamond.hw, diamond.cy);
-      c.closePath();
-    }
-    function drawDiamondRim() {
-      ctx.save();
-      ctx.shadowBlur = CFG.DIAMOND_RIM_BLUR;
-      ctx.shadowColor = 'rgba(232,93,4,0.6)';
-      buildDiamondPath(ctx);
-      ctx.strokeStyle = 'rgba(232,93,4,0.50)';
-      ctx.lineWidth   = 1.5;
-      ctx.stroke();
-      buildDiamondPath(ctx);
-      ctx.fillStyle = 'rgba(10,10,15,0.22)';
-      ctx.fill();
-      ctx.restore();
-    }
+    // The diamond geometry (diamond.*) still shapes the ember flow via
+    // repelFromDiamond — particles part around the forge mark — but its rim
+    // is no longer drawn: the visible orange diamond was removed by request.
 
     // ── click blast ────────────────────────────────────────
     function spawnBlast(lx, ly) {
@@ -295,18 +271,11 @@
 
     // ── interaction ────────────────────────────────────────
     function bindInteraction() {
-      window.addEventListener('mousemove', function (e) {
-        mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true;
-      }, { passive: true });
-      window.addEventListener('mouseleave', function () { mouse.active = false; });
+      // No mouse-follow spotlight — only a discrete click/tap ember burst.
       window.addEventListener('click', function (e) { spawnBlast(e.clientX, e.clientY); });
-      window.addEventListener('touchmove', function (e) {
-        if (e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; mouse.active = true; }
-      }, { passive: true });
       window.addEventListener('touchstart', function (e) {
         if (e.touches.length > 0) spawnBlast(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: true });
-      window.addEventListener('touchend', function () { mouse.active = false; });
       document.addEventListener('visibilitychange', function () {
         if (document.hidden) { if (frameId !== null) { cancelAnimationFrame(frameId); frameId = null; } }
         else { if (frameId === null) { lastTime = performance.now(); frameId = requestAnimationFrame(loop); } }
@@ -356,10 +325,7 @@
       ctx.drawImage(trailCanvas, 0, 0, W, H);
       ctx.restore();
 
-      // 4. Diamond rim glow
-      drawDiamondRim();
-
-      // 5. Vignette
+      // 4. Vignette
       var vig = ctx.createRadialGradient(W*0.5, H*0.5, H*0.15, W*0.5, H*0.5, Math.max(W,H)*0.78);
       vig.addColorStop(0, 'rgba(10,10,15,0)');
       vig.addColorStop(1, 'rgba(10,10,15,0.58)');
@@ -369,7 +335,7 @@
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
 
-      // 6. Warm overlay (overlay blend)
+      // 5. Warm overlay (overlay blend)
       ctx.save();
       ctx.globalCompositeOperation = 'overlay';
       var warmGrad = ctx.createLinearGradient(0, H*0.6, 0, H);
