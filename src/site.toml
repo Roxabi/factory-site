@@ -47,7 +47,7 @@ f_legal_notice    = "Legal notice"
 f_sibling         = "Foundation brand — shared amber family."
 f_sibling_href    = "https://roxabi.dev"
 f_sibling_label   = "roxabi.dev"
-f_copyright       = "© 2026 Roxabi · AGPL-3.0 License"
+f_copyright       = '© 2026 <a href="https://roxabi.dev" rel="noopener">Roxabi</a> · AGPL-3.0 License'
 
 [lang.fr]
 prefix            = "/fr"
@@ -88,7 +88,7 @@ f_legal_notice    = "Mentions légales"
 f_sibling         = "Marque fondation — famille ambre partagée."
 f_sibling_href    = "https://roxabi.dev"
 f_sibling_label   = "roxabi.dev"
-f_copyright       = "© 2026 Roxabi · Licence AGPL-3.0"
+f_copyright       = '© 2026 <a href="https://roxabi.dev" rel="noopener">Roxabi</a> · Licence AGPL-3.0'
 
 # ── Pages. `path` is lang-agnostic and lang-prefix-free ("" = site root). ─────
 # `active` highlights a nav item. `jsonld` selects the structured-data builder.
