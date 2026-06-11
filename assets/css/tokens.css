@@ -15,7 +15,7 @@
   --accent-on:   #fafafa;          /* text on accent button */
   --text:        #fafafa;          /* Spark White */
   --text-muted:  #9ca3af;          /* textdim from v17 (canonical) */
-  --text-dim:    #6b7280;          /* Steel Gray — metadata only */
+  --text-dim:    #7d8895;          /* Steel Gray — metadata only. Was #6b7280 (3.65:1 on surface, AA fail) → 4.9:1 */
   --border:      rgba(255,255,255,0.07); /* v17 canonical */
   --border-hi:   #2a2a35;          /* surface3 from v17 */
 
@@ -23,7 +23,7 @@
   --code-bg:     #0a0a0f;
   --code-text:   #fafafa;
   --code-keyword:#e85d04;
-  --code-muted:  #6b7280;
+  --code-muted:  #7d8895;          /* same AA fix as --text-dim (code comments are small text) */
   --code-string: #9ecbff;
 
   /* Glow — ember drop-shadow */
@@ -65,7 +65,7 @@
   --accent-on:   #ffffff;
   --text:        #1c1917;
   --text-muted:  #57534e;
-  --text-dim:    #78716c;
+  --text-dim:    #6b6560;          /* was #78716c (borderline 4.4-4.6:1) → 5.5:1, safe on bg + panel */
   --border:      rgba(0,0,0,0.08);
   --border-hi:   #e9e8e2;
   --glow-accent: 0 0 32px rgba(194,65,12,0.18);
