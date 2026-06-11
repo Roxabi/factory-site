@@ -219,6 +219,27 @@ priority    = "0.3"
   og_desc  = "Éditeur, hébergeur, propriété intellectuelle et données personnelles de factory.roxabi.dev."
   crumb    = "Mentions légales"
 
+[[page]]
+id          = "not-found"
+path        = "404.html"
+body        = "404"
+og_type     = "website"
+footer      = "min"
+shader      = false
+active      = ""
+jsonld      = "none"
+sitemap     = false
+  [page.en]
+  title    = "Page not found — Roxabi Factory"
+  desc     = "This path doesn't exist. Head back to the Factory floor."
+  og_title = "Page not found — Roxabi Factory"
+  og_desc  = "This path doesn't exist. Head back to the Factory floor."
+  [page.fr]
+  title    = "Page introuvable — Roxabi Factory"
+  desc     = "Ce chemin n'existe pas. Retourne sur le plancher de la Factory."
+  og_title = "Page introuvable — Roxabi Factory"
+  og_desc  = "Ce chemin n'existe pas. Retourne sur le plancher de la Factory."
+
 # ── Documentation entries (collection="documentation"). Index page above. ──────
 # Each entry carries `tags` (organizing axis); the index groups & filters by tag.
 # Manifest order = reading order: factory-roadmap, tool-architecture, architecture, atelier-lyra.
