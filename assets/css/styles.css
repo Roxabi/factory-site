@@ -447,6 +447,14 @@ a.proj-card:hover .arrow { transform: translateX(3px); }
 /* ── Constitution / article layout ────────────────────────── */
 .doc-hero { border-bottom: 1px solid var(--border); text-align: center; padding-block: var(--s-2xl); }
 .doc-hero .meta { font-family: var(--font-mono); font-size: .75rem; color: var(--text-dim); margin-top: var(--s-md); }
+
+/* ── Flow: native message-workflow diagram (.flow-stage, scoped) ─ */
+/* The diagram brings its own scoped styles (src/partials/flow_stage.html);
+   here we only give it a wide container so it breathes past the prose column,
+   plus bottom padding to clear the fixed footer bar. */
+.flow-section { padding: var(--s-xl) 0 calc(var(--s-2xl) + var(--s-xl)); }
+.flow-wide { width: 100%; max-width: 1480px; margin-inline: auto; padding-inline: var(--s-lg); }
+@media (max-width: 860px) { .flow-wide { padding-inline: var(--s-md); } }
 .constitution { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--s-2xl); align-items: start; }
 .const-body { min-width: 0; }
 .const-body pre.code, pre.code { overflow-x: auto; max-width: 100%; }

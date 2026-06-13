@@ -285,11 +285,13 @@ def build_page(p: dict, lang: str, tmpl, nav_t, foot_full_t, foot_min_t) -> None
         "home_href": href("", lang),
         "tools_href": href("tools/", lang),
         "documentation_href": href("documentation/", lang),
+        "flow_href": href("flow/", lang),
         "legal_href": href("legal/", lang),
         "agent1_href": href("agent-1/", lang),
         "lang_alt_href": href(path, other),
         "tools_current": ' aria-current="page"' if p["active"] == "tools" else "",
         "docs_current": ' aria-current="page"' if p["active"] == "docs" else "",
+        "flow_current": ' aria-current="page"' if p["active"] == "flow" else "",
         # head / SEO (derived)
         "title": pl["title"],
         "desc": pl["desc"],
@@ -331,6 +333,11 @@ def build_page(p: dict, lang: str, tmpl, nav_t, foot_full_t, foot_min_t) -> None
             body = body.replace(anchor, anchor + "\n    " + meta, 1)
     if "{{doc_tags}}" in body:
         body = body.replace("{{doc_tags}}", tag_pills(p.get("tags", []), lang))
+    # Flow page: inject the self-contained, scoped message-workflow diagram
+    # (markup + scoped CSS + IIFE JS) from a shared partial — one stage, both
+    # languages, so it lives in a single file instead of being duplicated.
+    if "{{flow_stage}}" in body:
+        body = body.replace("{{flow_stage}}", load(SRC / "partials" / "flow_stage.html"))
     if p.get("collection") == "documentation" and p.get("tags"):
         body = body.replace("</main>", doc_footer_nav(lang, p) + "\n</main>")
     # `shader` is a vendored module id (e.g. "kinetic-grid") or false. When set,

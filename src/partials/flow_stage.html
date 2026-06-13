@@ -1,0 +1,826 @@
+<!-- Factory message-workflow diagram — ported natively from the forge artifact
+     forge.roxabi.dev/roxabi-factory/visuals/factory-workflow.
+
+     Adapted for factory-site:
+       - all CSS scoped under .flow-stage (no collision with site styles);
+       - the diagram's own design tokens stay local to .flow-stage, so the
+         technical dark canvas is self-contained regardless of site theme;
+       - fonts resolve to the site's self-hosted Inter + JetBrains Mono;
+       - JS wrapped in an IIFE (no globals leak into app.js) with a one-shot
+         boot guard (the original double-init re-rendered every node);
+       - the diagram's own page title and footer are dropped here (the site page
+         already provides an h1 hero and a footer) to avoid duplicate landmarks.
+     Shared by the EN and FR pages via the flow_stage build token. -->
+<style>
+  .flow-stage{
+    --bg:#0d1117; --bg-cell:#0f141a; --bg-panel:#13191f; --bg-card:#161b22;
+    --border:#21262d; --border-hi:#30363d;
+    --text:#fafafa; --text-muted:#8b93a1; --text-dim:#6b7280;
+    --cyan:#22d3ee; --amber:#f59e0b; --green:#10b981; --purple:#c084fc;
+    --plum:#a855f7; --accent:#e85d04; --red:#ef4444; --orange:#fb923c;
+    --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 700px at 78% -8%, #15233a44,transparent 60%),
+      radial-gradient(1000px 600px at 8% 108%, #1a143088,transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.45;
+    border:1px solid var(--border); border-radius:16px;
+  }
+  .flow-stage *{box-sizing:border-box}
+  /* neutralize site base rules that would otherwise leak into the stage */
+  .flow-stage h1,.flow-stage h2,.flow-stage h3,.flow-stage h4,
+  .flow-stage p,.flow-stage ul,.flow-stage ol,.flow-stage dl,.flow-stage dd{margin:0;padding:0}
+  .flow-stage ul,.flow-stage ol{list-style:none}
+  .flow-stage a{color:var(--cyan);text-decoration:none}
+  .flow-stage .page{padding:24px 22px 40px}
+  .flow-stage .inner{max-width:1440px;margin:0 auto}
+
+  /* header */
+  .flow-stage header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px;justify-content:space-between;
+    padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+  .flow-stage .htitle p{margin:0;color:var(--text-muted);font-size:11.5px;font-family:var(--mono);line-height:1.6}
+  .flow-stage .hosts{display:flex;gap:10px;flex-wrap:wrap}
+  .flow-stage .host{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:180px}
+  .flow-stage .host .hn{font-weight:700;font-size:13px}
+  .flow-stage .host .hn .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .flow-stage .host .hd{color:var(--text-muted);font-size:10.5px;font-family:var(--mono);margin-top:2px;line-height:1.5}
+  .flow-stage .host .roles{color:var(--text-dim);font-size:10px;font-family:var(--mono);margin-top:1px}
+  .flow-stage .m1 .dot{background:var(--green);box-shadow:0 0 7px var(--green)}
+  .flow-stage .m2 .dot{background:var(--amber);box-shadow:0 0 7px var(--amber)}
+
+  /* control bar */
+  .flow-stage .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .flow-stage .bar-left{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .flow-stage .legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .flow-stage .lg{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-family:var(--mono)}
+  .flow-stage .ln{width:16px;height:0;border-top:2.5px solid;border-radius:2px}
+  .flow-stage .controls{display:flex;gap:7px;flex-wrap:wrap}
+  .flow-stage .ctl{cursor:pointer;user-select:none;font-size:10.5px;font-family:var(--mono);color:var(--text);
+    background:var(--bg-panel);border:1px solid var(--border-hi);border-radius:7px;padding:4px 9px;transition:.15s}
+  .flow-stage .ctl:hover{border-color:var(--cyan)}
+  .flow-stage .ctl.off{opacity:.35;text-decoration:line-through}
+  .flow-stage .uc-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .flow-stage .uc-label{font-size:10px;font-family:var(--mono);color:var(--text-dim);white-space:nowrap}
+  .flow-stage .uc-btn{cursor:pointer;user-select:none;font-size:10px;font-family:var(--mono);color:var(--text-muted);
+    background:var(--bg-panel);border:1px solid var(--border-hi);border-radius:7px;padding:3.5px 8px;transition:.15s;white-space:nowrap}
+  .flow-stage .uc-btn:hover{border-color:var(--amber);color:var(--text)}
+  .flow-stage .uc-btn.active{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.4);color:var(--amber)}
+  .flow-stage .uc-play{cursor:pointer;font-size:10px;font-family:var(--mono);color:var(--green);
+    background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.3);border-radius:7px;padding:3.5px 8px;transition:.15s;white-space:nowrap}
+  .flow-stage .uc-play:hover{border-color:var(--green)}
+  .flow-stage .uc-play:disabled{opacity:.38;cursor:default}
+  .flow-stage .uc-reset{cursor:pointer;font-size:10px;font-family:var(--mono);color:var(--text-muted);
+    background:var(--bg-panel);border:1px solid var(--border-hi);border-radius:7px;padding:3.5px 8px;transition:.15s;display:none;white-space:nowrap}
+  .flow-stage .uc-reset.visible{display:inline-block}
+  .flow-stage .uc-reset:hover{border-color:var(--text-muted);color:var(--text)}
+
+  /* diagram row */
+  .flow-stage .diagram-row{display:flex;gap:0;align-items:stretch}
+  .flow-stage .stage-wrap{flex:1;min-width:0;position:relative;border:1px solid var(--border);border-radius:14px 0 0 14px;
+    background:linear-gradient(180deg,var(--bg-panel),var(--bg-cell));overflow:auto}
+  .flow-stage .stage-wrap::-webkit-scrollbar{height:8px;width:8px}
+  .flow-stage .stage-wrap::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:8px}
+
+  /* canvas */
+  .flow-stage .canvas{position:relative;width:100%;height:1060px}
+  .flow-stage .net-label{position:absolute;left:14px;top:10px;font-family:var(--mono);font-size:10.5px;
+    color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;z-index:10;pointer-events:none}
+
+  /* SVG edges */
+  .flow-stage svg.edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
+  .flow-stage svg.edges path{fill:none;stroke-width:1.7;opacity:.6;transition:opacity .15s,stroke-width .15s}
+  .flow-stage svg.edges path.message{stroke:var(--cyan)}
+  .flow-stage svg.edges path.conditional{stroke:var(--amber);stroke-dasharray:5 3}
+  .flow-stage svg.edges path.store{stroke:var(--plum);stroke-dasharray:2 3;opacity:.45}
+  .flow-stage svg.edges path.hot{opacity:1!important;stroke-width:2.6;stroke-dasharray:none!important}
+  .flow-stage .dimmed svg.edges path:not(.hot){opacity:.05}
+  .flow-stage .hide-message .message,.flow-stage .hide-conditional .conditional,.flow-stage .hide-store .store{display:none!important}
+  .flow-stage .elabel{font-family:var(--mono);font-size:8.5px;fill:var(--text-dim);opacity:0}
+  .flow-stage .elabel.hot{opacity:1}
+  .flow-stage svg.edges path.uc-active{opacity:1!important;stroke-width:2.6!important}
+  .flow-stage svg.edges path.uc-done{opacity:.4!important;stroke-width:1.7!important}
+  .flow-stage svg.edges g.uc-particle-wrap{filter:drop-shadow(0 0 5px var(--pcol,#22d3ee))}
+
+  /* zones */
+  .flow-stage .zone{position:absolute;z-index:0;border-radius:12px;border:1px dashed;pointer-events:none}
+  .flow-stage .zone .zl{position:absolute;top:6px;left:10px;font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase}
+  .flow-stage .zone-adapters{border-color:rgba(34,211,238,.3);background:rgba(34,211,238,.03);border-style:solid}
+  .flow-stage .zone-adapters .zl{color:rgba(34,211,238,.6)}
+  .flow-stage .zone-hub{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.03)}
+  .flow-stage .zone-hub .zl{color:rgba(245,158,11,.6);font-size:9px}
+  .flow-stage .zone-workers{border-color:rgba(16,185,129,.22);background:rgba(16,185,129,.025)}
+  .flow-stage .zone-workers .zl{color:rgba(16,185,129,.55)}
+  .flow-stage .zone-m2{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)}
+  .flow-stage .zone-m2 .zl{color:rgba(245,158,11,.7)}
+  .flow-stage .zone-stores{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.04)}
+  .flow-stage .zone-stores .zl{color:rgba(168,85,247,.6);font-size:9px}
+
+  /* nodes */
+  .flow-stage .node{position:absolute;z-index:2;transform:translate(-50%,-50%);
+    width:150px;background:linear-gradient(180deg,var(--bg-panel),var(--bg-card));
+    border:1px solid var(--border-hi);border-radius:10px;padding:8px 10px 8px 12px;
+    cursor:default;transition:transform .12s,box-shadow .15s,border-color .15s;
+    box-shadow:0 2px 12px rgba(0,0,0,.5)}
+  .flow-stage .node .accent{position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--text-dim)}
+  .flow-stage .node:hover{transform:translate(-50%,-50%) translateY(-2px);border-color:var(--border-hi);box-shadow:0 8px 24px rgba(0,0,0,.65)}
+  .flow-stage .node.hot{border-color:rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 8px 26px rgba(0,0,0,.75)}
+  .flow-stage .dimmed .node:not(.hot){opacity:.2}
+  .flow-stage .node .nh{display:flex;align-items:center;justify-content:space-between;gap:5px}
+  .flow-stage .node .nn{font-weight:700;font-size:11.5px;font-family:var(--mono);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flow-stage .node .nimg{color:var(--text-muted);font-size:9.5px;font-family:var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flow-stage .node .nd{color:var(--text-dim);font-size:9.5px;margin-top:2px;line-height:1.3}
+  .flow-stage .tag{font-size:7.5px;font-family:var(--mono);font-weight:700;padding:1.5px 4px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+  .flow-stage .tag-adapter{background:rgba(34,211,238,.12);color:var(--cyan)}
+  .flow-stage .tag-bus{background:rgba(245,158,11,.14);color:var(--amber)}
+  .flow-stage .tag-hub{background:rgba(245,158,11,.15);color:var(--amber)}
+  .flow-stage .tag-worker{background:rgba(16,185,129,.12);color:var(--green)}
+  .flow-stage .tag-svc{background:rgba(251,146,60,.12);color:var(--orange)}
+  .flow-stage .tag-store{background:rgba(168,85,247,.13);color:var(--plum)}
+  .flow-stage .hb{position:absolute;right:5px;bottom:4px;font-size:7.5px;font-family:var(--mono);font-weight:700;padding:1px 4px;border-radius:20px}
+  .flow-stage .hb.M1{background:rgba(16,185,129,.1);color:var(--green)}
+  .flow-stage .hb.M2{background:rgba(245,158,11,.1);color:var(--amber);border:1px dashed rgba(245,158,11,.25)}
+  .flow-stage .dormant{opacity:.55}.flow-stage .dormant .nn::after{content:" ⊘";color:var(--red)}
+  .flow-stage .node.uc-active{border-color:var(--amber)!important;
+    box-shadow:0 0 0 2px rgba(245,158,11,.3),0 0 20px rgba(245,158,11,.18),0 6px 22px rgba(0,0,0,.75)!important;z-index:5}
+  .flow-stage .node.uc-done{border-color:rgba(245,158,11,.4)!important;opacity:1!important}
+
+  /* NATS bus */
+  .flow-stage .node.bus{width:58%;max-width:780px;
+    background:linear-gradient(90deg,rgba(34,211,238,.05),rgba(34,211,238,.02),rgba(34,211,238,.05));
+    border:1.5px solid rgba(34,211,238,.22);box-shadow:0 0 22px rgba(34,211,238,.07),inset 0 0 24px rgba(34,211,238,.03);
+    padding:9px 14px}
+  .flow-stage .node.bus .accent{display:none}
+  .flow-stage .node.bus .nn{font-size:12px;color:var(--cyan)}
+  .flow-stage .node.bus .nh{justify-content:flex-start;gap:8px}
+  .flow-stage .node.bus .subj{color:var(--text-dim);font-size:9px;font-family:var(--mono);margin-top:4px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flow-stage .node.bus .subj b{color:rgba(34,211,238,.75);font-weight:600}
+
+  /* store nodes */
+  .flow-stage .node.store{width:132px;background:linear-gradient(180deg,rgba(168,85,247,.06),rgba(168,85,247,.03));border-color:rgba(168,85,247,.2)}
+  .flow-stage .node.store .accent{background:var(--plum)}
+  .flow-stage .node.store .nn{font-size:11px}
+
+  /* conditional / dashed nodes */
+  .flow-stage .node.cond{border-style:dashed;opacity:.88}
+
+  /* sidebar */
+  .flow-stage .sidebar{width:285px;flex-shrink:0;border:1px solid var(--border-hi);border-left:none;
+    border-radius:0 14px 14px 0;background:var(--bg-cell);display:flex;flex-direction:column;overflow:hidden}
+  .flow-stage .sb-header{padding:11px 13px 9px;border-bottom:1px solid var(--border)}
+  .flow-stage .sb-header h4{margin:0 0 2px;font-size:12.5px;font-family:var(--mono);color:var(--text)}
+  .flow-stage .sb-header .ipath{color:var(--text-muted);font-family:var(--mono);font-size:9.5px;margin-bottom:6px;word-break:break-all}
+  .flow-stage .sb-header dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+  .flow-stage .sb-header dt{color:var(--text-dim);font-family:var(--mono);font-size:9px}
+  .flow-stage .sb-header dd{margin:0;font-size:10.5px;font-family:var(--mono);color:var(--text)}
+  .flow-stage .sb-header .hint{color:var(--text-dim);font-size:10px;font-style:italic;line-height:1.55}
+  .flow-stage .sb-uc{padding:11px 13px;border-top:1px solid var(--border);flex:1;overflow:auto;display:none}
+  .flow-stage .sb-uc.visible{display:block}
+  .flow-stage .sb-uc .uc-title{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:7px}
+  .flow-stage .uc-steps-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:3px}
+  .flow-stage .uc-steps-list li{font-family:var(--mono);font-size:10px;padding:4px 7px;border-radius:6px;
+    border:1px solid transparent;color:var(--text-dim);transition:.15s;line-height:1.4}
+  .flow-stage .uc-steps-list li.step-done{color:var(--green);border-color:rgba(16,185,129,.15);background:rgba(16,185,129,.04)}
+  .flow-stage .uc-steps-list li.step-active{color:var(--amber);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05);
+    box-shadow:0 0 8px rgba(245,158,11,.1)}
+  .flow-stage .uc-steps-list li .sn{font-size:8px;opacity:.5;margin-right:3px}
+  .flow-stage .sb-uc .uc-desc{margin-top:8px;font-size:10px;color:var(--text-muted);line-height:1.55;
+    padding-top:8px;border-top:1px dashed var(--border)}
+  .flow-stage .sb-uc .uc-desc b{color:var(--text)}
+
+  /* sections below */
+  .flow-stage .grid{display:grid;gap:16px;margin-top:22px}
+  .flow-stage .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:1000px){.flow-stage .g3{grid-template-columns:1fr}}
+  .flow-stage .card{background:linear-gradient(180deg,var(--bg-panel),var(--bg-card));border:1px solid var(--border);border-radius:12px;padding:15px 16px}
+  .flow-stage .card h3{margin:0 0 3px;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .flow-stage .card h3 .ic{width:8px;height:8px;border-radius:2px}
+  .flow-stage .card .sub{color:var(--text-muted);font-size:10.5px;font-family:var(--mono);margin:0 0 11px}
+  .flow-stage .sect-h{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);
+    font-family:var(--mono);margin:26px 0 4px;display:flex;align-items:center;gap:9px}
+  .flow-stage .sect-h::after{content:"";flex:1;height:1px;background:var(--border)}
+  .flow-stage .plane{border-left:3px solid}
+  .flow-stage .plane.message{border-color:var(--cyan)}
+  .flow-stage .plane.conditional{border-color:var(--amber)}
+  .flow-stage .plane.store{border-color:var(--plum)}
+  .flow-stage .plane .flow{font-family:var(--mono);font-size:10.5px;color:var(--text-muted);line-height:1.7;margin-top:7px}
+  .flow-stage .plane .flow b{color:var(--text)}
+  .flow-stage .flow-foot{margin-top:30px;padding-top:14px;border-top:1px solid var(--border);color:var(--text-dim);font-size:10px;font-family:var(--mono);line-height:1.7}
+</style>
+
+<div class="flow-stage">
+<div class="page">
+  <div class="inner">
+    <header>
+      <div class="htitle">
+        <p>Production message lifecycle &#8212; source-verified @ staging &#183; hub-spoke &#183; NATS JetStream &#183; Python 3.12 &#183; asyncio &#183; Podman Quadlet</p>
+      </div>
+      <div class="hosts">
+        <div class="host m1">
+          <div class="hn"><span class="dot"></span>M&#x2081; &#183; roxabituwer</div>
+          <div class="hd">192.168.1.16 &#183; RTX 3080 &#183; 24/7</div>
+          <div class="roles">roles: factory-hub &#183; voice-worker</div>
+        </div>
+        <div class="host m2">
+          <div class="hn"><span class="dot"></span>M&#x2082; &#183; roxabitower</div>
+          <div class="hd">192.168.1.14 &#183; RTX 5070 Ti &#183; on-demand</div>
+          <div class="roles">roles: llm-worker &#183; image-worker</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="bar">
+      <div class="bar-left">
+        <div class="legend">
+          <span class="lg">flux:</span>
+          <span class="lg"><span class="ln" style="border-color:var(--cyan)"></span>message NATS</span>
+          <span class="lg"><span class="ln" style="border-color:var(--amber);border-top-style:dashed"></span>conditional</span>
+          <span class="lg"><span class="ln" style="border-color:var(--plum);border-top-style:dotted"></span>store/context</span>
+        </div>
+        <div class="controls">
+          <span class="ctl" data-plane="message">message</span>
+          <span class="ctl" data-plane="conditional">conditional</span>
+          <span class="ctl" data-plane="store">store</span>
+        </div>
+      </div>
+      <div class="uc-bar">
+        <span class="uc-label">use case:</span>
+        <span class="uc-btn" data-uc="0">&#x2460; text message</span>
+        <span class="uc-btn" data-uc="1">&#x2461; voice STT</span>
+        <span class="uc-btn" data-uc="2">&#x2462; persist turn</span>
+        <button class="uc-play" id="ucPlay" disabled>&#9654; play</button>
+        <button class="uc-reset" id="ucReset">&#8634; reset</button>
+      </div>
+    </div>
+  </div><!-- /.inner -->
+
+  <!-- diagram row: full-width -->
+  <div class="diagram-row">
+    <div class="stage-wrap">
+      <div class="canvas" id="canvas">
+        <div class="net-label">factory.network &#8212; M&#x2081; hub &#183; M&#x2082; GPU on-demand &#183; tailnet</div>
+
+        <!-- zones positioned by placeZones() in JS -->
+        <div class="zone zone-adapters" id="zoneAdapters"><span class="zl">Adapters &#183; M&#x2081;</span></div>
+        <div class="zone zone-hub"      id="zoneHub"><span class="zl">factory-hub &#183; 10-stage middleware</span></div>
+        <div class="zone zone-workers"  id="zoneWorkers"><span class="zl">Workers / Services &#183; M&#x2081;</span></div>
+        <div class="zone zone-m2"       id="zoneM2"><span class="zl">M&#x2082; &#183; GPU on-demand</span></div>
+        <div class="zone zone-stores"   id="zoneStores"><span class="zl">Stores &#183; Infra</span></div>
+
+        <!-- SVG edge overlay -->
+        <svg class="edges" id="edges"><defs>
+          <marker id="ar-message"     markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#22d3ee"/></marker>
+          <marker id="ar-conditional" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f59e0b"/></marker>
+          <marker id="ar-store"       markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#a855f7"/></marker>
+        </defs></svg>
+      </div>
+    </div>
+
+    <!-- sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sb-header" id="sbHeader">
+        <h4>Hover = detail</h4>
+        <div class="hint">Hover a node to isolate its edges.<br>Select a use case to animate the production message lifecycle.</div>
+      </div>
+      <div class="sb-uc" id="sbUc">
+        <div class="uc-title" id="ucTitle"></div>
+        <ul class="uc-steps-list" id="ucStepsList"></ul>
+        <div class="uc-desc" id="ucDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- info sections -->
+  <div class="inner">
+    <div class="sect-h">Message Planes</div>
+    <div class="grid g3">
+      <div class="card plane message">
+        <h3><span class="ic" style="background:var(--cyan)"></span>&#x2460; NATS Message</h3>
+        <p class="sub">factory.inbound.* &#183; factory.outbound.* &#183; JetStream</p>
+        <div class="flow"><b>Telegram/Discord</b> &#8594; NATS inbound &#8594; <b>factory-hub</b> (10-stage middleware: trace&#8594;trust-resolve&#8594;binding&#8594;pool&#8594;dispatch) &#8594; <b>clipool</b> (spawn/resume claude CLI) &#8594; outbound subject &#8594; adapter &#8594; Bot API.<br>Turns persisted via <b>factory-turn-writer</b> (JetStream durable consumer).</div>
+      </div>
+      <div class="card plane conditional">
+        <h3><span class="ic" style="background:var(--amber)"></span>&#x2461; Conditional</h3>
+        <p class="sub">dashed edges &#183; opt-in services</p>
+        <div class="flow"><b>if audio:</b> hub &#8594; <b>voice-stt</b> &#8594; transcript inline.<br><b>if TTS:</b> hub &#8594; <b>voice-tts</b> &#8594; audio blob &#8594; adapter.<br><b>if backend=llm:</b> hub &#8594; <b>llm-worker M&#x2082;</b> (GPU Qwen3).<br><b>if image tool:</b> hub &#8594; <b>image-worker M&#x2082;</b> (FLUX/SD3.5).<br><b>gh-helper:</b> mint_failure &#8594; hub.</div>
+      </div>
+      <div class="card plane store">
+        <h3><span class="ic" style="background:var(--plum)"></span>&#x2462; Context / Stores</h3>
+        <p class="sub">dotted ghost reads &#183; session resume</p>
+        <div class="flow"><b>hub</b> reads auth.db (trust), config.db (agent registry), roxabi-vault (L3 semantic).<br><b>clipool</b> reads turns.db for session resume.<br><b>Adapters</b> watch NATS KV factory-state (hub.ready).<br><b>turn-writer</b> = sole writer &#8594; turns.db.</div>
+      </div>
+    </div>
+
+    <div class="flow-foot">
+      Source of truth: ~/projects/roxabi-factory &#183; hosts.toml &#183; deploy/quadlet.toml &#183; *.container &#183; docs/architecture/<br>
+      Generated 2026-06-04 &#183; hover = edge isolation &#183; use cases animated &#183; source-verified @ staging.
+    </div>
+  </div><!-- /.inner -->
+</div><!-- /.page -->
+</div><!-- /.flow-stage -->
+
+<!-- inline graph data -->
+<script type="application/json" id="graph-data">
+{
+  "nodes": [
+    {"id":"tg",     "n":"factory-telegram",   "img":"aiogram v3",     "base":"adapter","h":"M1","x":11,"y":7,  "d":"adapter Telegram — aiogram, FastAPI webhook -> factory.inbound.telegram.*"},
+    {"id":"dc",     "n":"factory-discord",    "img":"discord.py",     "base":"adapter","h":"M1","x":30,"y":7,  "d":"adapter Discord — gateway WS, thread tracking -> factory.inbound.discord.*"},
+    {"id":"gh",     "n":"factory-gh-helper",  "img":"gh token daemon","base":"svc",    "h":"M1","x":83,"y":6,  "d":"mints short-lived GitHub App tokens; mint_failure -> hub"},
+    {"id":"blob",   "n":"factory-blobstore",  "img":"FastAPI :8449",  "base":"svc",    "h":"M1","x":94,"y":20, "d":"SHA-256 content-addressed binaries (audio/image/attachments)"},
+    {"id":"nats",   "n":"factory-nats",       "img":"NATS 2.10",      "base":"bus",    "h":"M1","x":50,"y":22, "d":"NATS + JetStream :4222 — message bus, Core subjects + JetStream KV/streams","kind":"bus"},
+    {"id":"hub",    "n":"factory-hub",        "img":"orchestrator",   "base":"hub",    "h":"M1","x":50,"y":40, "d":"10-stage middleware — trace->trust-resolve->binding->pool create/resume->dispatch"},
+    {"id":"clipool","n":"factory-clipool",    "img":"CliPool worker", "base":"worker", "h":"M1","x":18,"y":58, "d":"spawns claude --input-format stream-json, --resume <uuid>; per-scope pools"},
+    {"id":"claude", "n":"claude subprocess",  "img":"Claude CLI",     "base":"worker", "h":"M1","x":6, "y":71, "d":"streaming LlmEvent NDJSON; reads session .jsonl from ~/.claude"},
+    {"id":"stt",    "n":"voice-stt",          "img":"voiceCLI",       "base":"svc",    "h":"M1","x":37,"y":58, "d":"transcribe audio inbound — conditional (if audio)","cond":true},
+    {"id":"tts",    "n":"voice-tts",          "img":"voiceCLI",       "base":"svc",    "h":"M1","x":55,"y":58, "d":"synthesize audio reply — conditional (if TTS enabled)","cond":true},
+    {"id":"turnw",  "n":"factory-turn-writer","img":"turn-writer",    "base":"worker", "h":"M1","x":72,"y":58, "d":"durable JetStream consumer (FACTORY_TURNS) -> turns.db"},
+    {"id":"llm",    "n":"llm-worker",         "img":"llmCLI",         "base":"worker", "h":"M2","x":66,"y":73, "d":"factory.llm.generate — conditional (if backend=llm)","cond":true},
+    {"id":"image",  "n":"image-worker",       "img":"imageCLI",       "base":"worker", "h":"M2","x":82,"y":73, "d":"factory.image.generate — conditional (if image tool)","cond":true,"dorm":true},
+    {"id":"auth",   "n":"auth.db",            "img":"SQLite",         "base":"store",  "h":"M1","x":10,"y":88, "d":"identity grants, trust levels (owner/trusted/blocked)","kind":"store"},
+    {"id":"config", "n":"config.db",          "img":"SQLite",         "base":"store",  "h":"M1","x":26,"y":88, "d":"agent registry, bot-agent map, user prefs","kind":"store"},
+    {"id":"turns",  "n":"turns.db",           "img":"SQLite",         "base":"store",  "h":"M1","x":42,"y":88, "d":"conversation turns, session resume map","kind":"store"},
+    {"id":"kv",     "n":"NATS KV",            "img":"JetStream",      "base":"store",  "h":"M1","x":58,"y":88, "d":"factory-state (hub.ready), msg-index (reply resume)","kind":"store"},
+    {"id":"vault",  "n":"roxabi-vault",       "img":"SQLite+vec",     "base":"store",  "h":"M1","x":74,"y":88, "d":"L3 semantic memory (per user_id)","kind":"store"}
+  ],
+  "edges": [
+    {"f":"tg",     "t":"nats",    "plane":"message",     "label":"factory.inbound.telegram.*"},
+    {"f":"dc",     "t":"nats",    "plane":"message",     "label":"factory.inbound.discord.*"},
+    {"f":"nats",   "t":"hub",     "plane":"message"},
+    {"f":"hub",    "t":"clipool", "plane":"message",     "label":"factory.clipool.cmd"},
+    {"f":"clipool","t":"claude",  "plane":"message",     "label":"spawn stream-json"},
+    {"f":"claude", "t":"clipool", "plane":"message",     "label":"NDJSON reply"},
+    {"f":"clipool","t":"nats",    "plane":"message",     "label":"_inbox reply"},
+    {"f":"nats",   "t":"tg",      "plane":"message",     "label":"factory.outbound.*"},
+    {"f":"nats",   "t":"dc",      "plane":"message"},
+    {"f":"tg",     "t":"blob",    "plane":"message",     "label":"HTTP attachments"},
+    {"f":"dc",     "t":"blob",    "plane":"message"},
+    {"f":"hub",    "t":"turnw",   "plane":"message",     "label":"factory.turns.write"},
+    {"f":"hub",    "t":"stt",     "plane":"conditional", "label":"if audio"},
+    {"f":"stt",    "t":"nats",    "plane":"message",     "label":"transcript reply"},
+    {"f":"hub",    "t":"tts",     "plane":"conditional", "label":"if TTS"},
+    {"f":"tts",    "t":"blob",    "plane":"message",     "label":"audio blob"},
+    {"f":"hub",    "t":"llm",     "plane":"conditional", "label":"if backend=llm"},
+    {"f":"hub",    "t":"image",   "plane":"conditional", "label":"if image tool"},
+    {"f":"gh",     "t":"hub",     "plane":"conditional", "label":"mint_failure"},
+    {"f":"hub",    "t":"auth",    "plane":"store"},
+    {"f":"hub",    "t":"config",  "plane":"store"},
+    {"f":"hub",    "t":"vault",   "plane":"store"},
+    {"f":"clipool","t":"turns",   "plane":"store",       "label":"session resume"},
+    {"f":"tg",     "t":"kv",      "plane":"store",       "label":"watch hub.ready"},
+    {"f":"dc",     "t":"kv",      "plane":"store"},
+    {"f":"turnw",  "t":"turns",   "plane":"store",       "label":"sole writer"}
+  ],
+  "useCases": [
+    {
+      "id": 0,
+      "title": "① Text message inbound -> response",
+      "desc": "<b>Telegram/Discord</b> -> NATS inbound -> factory-hub (10-stage middleware) -> clipool (spawn/resume claude CLI) -> streaming reply -> outbound subject -> adapter. <b>Full round-trip.</b>",
+      "steps": [
+        {"nodes":["tg"],           "edge":null,           "label":"Telegram receives user message"},
+        {"nodes":["tg","nats"],    "edge":["tg","nats"],  "label":"Publish factory.inbound.telegram.<bot_id>"},
+        {"nodes":["nats","hub"],   "edge":["nats","hub"], "label":"Hub subscribes -> MiddlewarePipeline.process()"},
+        {"nodes":["hub"],          "edge":null,           "label":"Pipeline: trace->trust-resolve->binding->pool->dispatch"},
+        {"nodes":["hub","clipool"],"edge":["hub","clipool"],"label":"factory.clipool.cmd -> spawn/resume claude"},
+        {"nodes":["clipool","claude"],"edge":["clipool","claude"],"label":"spawn claude --input-format stream-json"},
+        {"nodes":["claude","clipool"],"edge":["claude","clipool"],"label":"NDJSON LlmEvent stream"},
+        {"nodes":["clipool","nats"],"edge":["clipool","nats"],"label":"Publish -> factory.outbound.<platform>.<bot>"},
+        {"nodes":["nats","tg"],    "edge":["nats","tg"],  "label":"Adapter Telegram sends reply to user"}
+      ]
+    },
+    {
+      "id": 1,
+      "title": "② Voice note inbound (STT)",
+      "desc": "<b>Telegram audio</b> -> blob attachment -> NATS inbound -> hub STT middleware (conditional) -> <b>voice-stt</b> (faster-whisper) -> transcript inline -> hub pipeline -> clipool. Audio never stored raw.",
+      "steps": [
+        {"nodes":["tg"],           "edge":null,           "label":"Telegram receives audio message"},
+        {"nodes":["tg","blob"],    "edge":["tg","blob"],  "label":"Adapter downloads attachment -> blobstore :8449"},
+        {"nodes":["tg","nats"],    "edge":["tg","nats"],  "label":"Publish factory.inbound.telegram (modality=voice)"},
+        {"nodes":["nats","hub"],   "edge":["nats","hub"], "label":"Hub -> STT middleware (conditional: if audio)"},
+        {"nodes":["hub","stt"],    "edge":["hub","stt"],  "label":"factory.voice.stt.request -> voice-stt"},
+        {"nodes":["stt","nats"],   "edge":["stt","nats"], "label":"Transcript reply -> inbox -> hub (inline)"},
+        {"nodes":["hub","clipool"],"edge":["hub","clipool"],"label":"factory.clipool.cmd (text turn)"},
+        {"nodes":["clipool","claude"],"edge":["clipool","claude"],"label":"spawn/resume claude"},
+        {"nodes":["clipool","nats"],"edge":["clipool","nats"],"label":"Outbound reply -> adapter"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "③ Persist turn (JetStream write)",
+      "desc": "<b>Hub</b> publishes <code>factory.turns.write</code> -> <b>turn-writer</b> (durable JetStream consumer, sole writer) writes <b>turns.db</b>. Session resume: clipool reads turns.db. Memory flush -> <b>roxabi-vault</b> (L3 semantic).",
+      "steps": [
+        {"nodes":["hub","turnw"],  "edge":["hub","turnw"],  "label":"Publish factory.turns.write (JetStream)"},
+        {"nodes":["turnw","turns"],"edge":["turnw","turns"],"label":"turn-writer sole writer -> turns.db (SQLite)"},
+        {"nodes":["clipool","turns"],"edge":["clipool","turns"],"label":"clipool reads turns.db for session resume"},
+        {"nodes":["hub","vault"],  "edge":["hub","vault"],  "label":"Memory flush -> roxabi-vault (L3 upsert)"},
+        {"nodes":["hub","auth"],   "edge":["hub","auth"],   "label":"Hub reads auth.db (trust levels)"},
+        {"nodes":["hub","config"], "edge":["hub","config"], "label":"Hub reads config.db (agent registry)"}
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+// Ported verbatim from the forge artifact, wrapped in an IIFE so its many
+// top-level declarations (NODES, canvas, svg, …) never collide with app.js,
+// and with a one-shot boot guard replacing the original load+timeout double-init.
+(function () {
+const NH = 1060;
+document.getElementById('canvas').style.height = NH + 'px';
+
+const BASE_TAGS = {
+  adapter:{c:'#22d3ee',t:'adapter',cls:'tag-adapter'},
+  bus:    {c:'#f59e0b',t:'bus',    cls:'tag-bus'},
+  hub:    {c:'#f59e0b',t:'hub',    cls:'tag-hub'},
+  worker: {c:'#10b981',t:'worker', cls:'tag-worker'},
+  svc:    {c:'#fb923c',t:'svc',    cls:'tag-svc'},
+  store:  {c:'#a855f7',t:'store',  cls:'tag-store'}
+};
+
+let NODES, EDGES, USE_CASES;
+
+function loadData(){
+  const el = document.getElementById('graph-data');
+  if(el){
+    const data = JSON.parse(el.textContent);
+    NODES = data.nodes; EDGES = data.edges; USE_CASES = data.useCases;
+  }
+}
+
+const canvas = document.getElementById('canvas');
+const nodeEl = {};
+
+function renderNodes(){
+  for(const nd of NODES){
+    const e = document.createElement('div');
+    const isBus   = nd.kind === 'bus';
+    const isStore = nd.kind === 'store';
+    let cls = 'node';
+    if(isBus)   cls += ' bus';
+    if(isStore) cls += ' store';
+    if(nd.cond) cls += ' cond';
+    if(nd.dorm) cls += ' dormant';
+    e.className = cls;
+    e.style.left = nd.x + '%';
+    e.style.top  = nd.y + '%';
+    e.dataset.id   = nd.id;
+    e.dataset.host = nd.h || '';
+    const b = BASE_TAGS[nd.base] || BASE_TAGS['svc'];
+    if(isBus){
+      e.innerHTML = `<div class="nh"><span class="nn">${nd.n}</span><span class="tag tag-bus">bus</span></div>
+        <div class="subj">subjects &middot; <b>factory.inbound.&lt;platform&gt;.&lt;bot_id&gt;</b> &middot; <b>factory.outbound.*</b> &middot; factory.clipool.cmd &middot; factory.turns.write &middot; factory.voice.stt &middot; factory.voice.tts &middot; NATS KV factory-state</div>`;
+    } else if(isStore){
+      e.innerHTML = `<span class="accent"></span>
+        <div class="nh"><span class="nn">${nd.n}</span><span class="tag tag-store">store</span></div>
+        <div class="nimg">${nd.img}</div>
+        <div class="nd">${nd.d.split('(')[0].trim()}</div>`;
+    } else {
+      e.innerHTML = `<span class="accent" style="background:${b.c}"></span>
+        <div class="nh"><span class="nn">${nd.n}</span><span class="tag ${b.cls}">${b.t}</span></div>
+        <div class="nimg">${nd.img}</div>
+        <div class="nd">${nd.d.split('—')[0].split('(')[0].trim()}</div>
+        ${nd.h && nd.h !== 'EX' ? `<span class="hb ${nd.h}">${nd.h==='M1'?'M₁':'M₂'}</span>` : ''}`;
+    }
+    canvas.appendChild(e);
+    nodeEl[nd.id] = e;
+    e.addEventListener('mouseenter', ()=>{ if(ucState!=='playing') spotlight(nd.id); });
+    e.addEventListener('mouseleave', ()=>{ if(ucState!=='playing') clearSpot(); });
+  }
+}
+
+// ---- SVG edge engine (verbatim from lyra-stack-v2.html) ----
+const svg = document.getElementById('edges');
+const NS  = 'http://www.w3.org/2000/svg';
+let paths = [];
+const pathByPair = new Map();
+
+function rect(id){
+  const el=nodeEl[id], cr=canvas.getBoundingClientRect(), b=el.getBoundingClientRect();
+  return {cx:b.left-cr.left+b.width/2, cy:b.top-cr.top+b.height/2, w:b.width, h:b.height};
+}
+function pairKey(a,b){ return [a,b].sort().join('|'); }
+function faceFor(dx,dy,isSource,edge){
+  if(edge){
+    if(isSource && edge.srcFace) return edge.srcFace;
+    if(!isSource && edge.dstFace) return edge.dstFace;
+  }
+  if(Math.abs(dy) >= Math.abs(dx)){
+    if(isSource) return dy>0?'bottom':'top';
+    else         return dy>0?'top':'bottom';
+  } else {
+    if(isSource) return dx>0?'right':'left';
+    else         return dx>0?'left':'right';
+  }
+}
+function portAnchor(r,face,slotIdx,slotCount){
+  const {cx,cy,w,h}=r;
+  const hw=w/2, hh=h/2;
+  const faceLen=(face==='top'||face==='bottom')?w:h;
+  const spread=Math.min(faceLen*0.55, slotCount*16);
+  const step=slotCount>1?spread/(slotCount-1):0;
+  const offset=slotCount>1?-spread/2+slotIdx*step:0;
+  switch(face){
+    case 'top':    return {x:cx+offset, y:cy-hh,  nx:0, ny:-1};
+    case 'bottom': return {x:cx+offset, y:cy+hh,  nx:0, ny:1};
+    case 'left':   return {x:cx-hw,     y:cy+offset, nx:-1, ny:0};
+    case 'right':  return {x:cx+hw,     y:cy+offset, nx:1,  ny:0};
+    default:       return {x:cx, y:cy, nx:0, ny:0};
+  }
+}
+function stubLen(dx,dy){
+  return Math.max(30, Math.min(220, Math.sqrt(dx*dx+dy*dy)*0.35));
+}
+
+function draw(){
+  svg.querySelectorAll(':scope > path, :scope > text, :scope > circle, :scope > g').forEach(n=>n.remove());
+  paths=[]; pathByPair.clear();
+
+  const seenPairs = new Map();
+  for(let i=0;i<EDGES.length;i++){
+    const e=EDGES[i], k=pairKey(e.f,e.t);
+    if(!seenPairs.has(k)){
+      seenPairs.set(k,{f:e.f,t:e.t,plane:e.plane,lab:e.label||null,edge:e,edgeIndices:[i]});
+    } else {
+      seenPairs.get(k).edgeIndices.push(i);
+      if(e.label && !seenPairs.get(k).lab) seenPairs.get(k).lab=e.label;
+    }
+  }
+  const dedupedEdges=[...seenPairs.values()];
+
+  const portMap=new Map();
+  for(let i=0;i<dedupedEdges.length;i++){
+    const {f,t,edge}=dedupedEdges[i];
+    const rf=rect(f), rt=rect(t);
+    const dx=rt.cx-rf.cx, dy=rt.cy-rf.cy;
+    const fFace=faceFor(dx,dy,true,edge);
+    const tFace=faceFor(dx,dy,false,edge);
+    const fk=`${f}:${fFace}`, tk=`${t}:${tFace}`;
+    if(!portMap.has(fk)) portMap.set(fk,[]);
+    if(!portMap.has(tk)) portMap.set(tk,[]);
+    portMap.get(fk).push(i);
+    portMap.get(tk).push(i);
+  }
+
+  for(let i=0;i<dedupedEdges.length;i++){
+    const {f,t,plane,lab,edge}=dedupedEdges[i];
+    const rf=rect(f), rt=rect(t);
+    const dx=rt.cx-rf.cx, dy=rt.cy-rf.cy;
+    const fFace=faceFor(dx,dy,true,edge);
+    const tFace=faceFor(dx,dy,false,edge);
+    const fk=`${f}:${fFace}`, tk=`${t}:${tFace}`;
+    const fSlots=portMap.get(fk), tSlots=portMap.get(tk);
+    const fi=fSlots.indexOf(i), ti=tSlots.indexOf(i);
+    const pu1=portAnchor(rf,fFace,fi,fSlots.length);
+    const pu2=portAnchor(rt,tFace,ti,tSlots.length);
+    const stb=stubLen(dx,dy);
+    const c1x=pu1.x+pu1.nx*stb, c1y=pu1.y+pu1.ny*stb;
+    const c2x=pu2.x+pu2.nx*stb, c2y=pu2.y+pu2.ny*stb;
+    const dStr=`M${pu1.x.toFixed(1)},${pu1.y.toFixed(1)} C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${pu2.x.toFixed(1)},${pu2.y.toFixed(1)}`;
+    const p=document.createElementNS(NS,'path');
+    p.setAttribute('d',dStr);
+    p.setAttribute('class',plane);
+    p.setAttribute('marker-end',`url(#ar-${plane})`);
+    p.dataset.f=f; p.dataset.t=t; p.dataset.pk=pairKey(f,t);
+    svg.appendChild(p);
+    paths.push(p);
+    pathByPair.set(pairKey(f,t),p);
+    if(lab){
+      const tx2=document.createElementNS(NS,'text');
+      const mx=0.125*pu1.x+0.375*c1x+0.375*c2x+0.125*pu2.x;
+      const my=0.125*pu1.y+0.375*c1y+0.375*c2y+0.125*pu2.y;
+      tx2.setAttribute('x',mx.toFixed(1));
+      tx2.setAttribute('y',(my-4).toFixed(1));
+      tx2.setAttribute('text-anchor','middle');
+      tx2.setAttribute('class','elabel');
+      tx2.dataset.pk=pairKey(f,t);
+      tx2.textContent=lab;
+      svg.appendChild(tx2);
+    }
+  }
+}
+
+// ---- particle engine ----
+const PLANE_COLORS={message:'#22d3ee',conditional:'#f59e0b',store:'#a855f7'};
+let particleEl=null, particleRAF=null;
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function clearParticle(){
+  if(particleRAF){cancelAnimationFrame(particleRAF);particleRAF=null;}
+  if(particleEl){particleEl.remove();particleEl=null;}
+}
+function spawnParticle(edgeF,edgeT,plane){
+  clearParticle();
+  const pk=pairKey(edgeF,edgeT), pathEl=pathByPair.get(pk);
+  if(!pathEl) return;
+  const col=PLANE_COLORS[plane]||'#ffffff';
+  const forward=(pathEl.dataset.f===edgeF);
+  const len=pathEl.getTotalLength();
+  const wrapper=document.createElementNS(NS,'g');
+  wrapper.setAttribute('class','uc-particle-wrap');
+  wrapper.style.setProperty('--pcol',col);
+  const halo=document.createElementNS(NS,'circle');
+  halo.setAttribute('r','9'); halo.setAttribute('fill',col); halo.setAttribute('opacity','0.18');
+  const core=document.createElementNS(NS,'circle');
+  core.setAttribute('r','4.5'); core.setAttribute('fill',col);
+  wrapper.appendChild(halo); wrapper.appendChild(core);
+  svg.appendChild(wrapper); particleEl=wrapper;
+  const DUR=750, start=performance.now();
+  function frame(now){
+    const u=Math.min((now-start)/DUR,1);
+    const e=easeInOutCubic(u);
+    const d=forward?e*len:(1-e)*len;
+    const pt=pathEl.getPointAtLength(d);
+    halo.setAttribute('cx',pt.x); halo.setAttribute('cy',pt.y);
+    core.setAttribute('cx',pt.x); core.setAttribute('cy',pt.y);
+    if(u<1) particleRAF=requestAnimationFrame(frame);
+    else particleRAF=null;
+  }
+  particleRAF=requestAnimationFrame(frame);
+}
+
+// ---- zone placement ----
+function rectOf(id){ return rect(id); }
+function placeZoneEl(zoneId, nodeIds, padL, padT, padR, padB){
+  const z=document.getElementById(zoneId);
+  if(!z) return;
+  const rects=nodeIds.filter(i=>nodeEl[i]).map(i=>rectOf(i));
+  if(!rects.length) return;
+  const xMin=Math.min(...rects.map(r=>r.cx-r.w/2));
+  const xMax=Math.max(...rects.map(r=>r.cx+r.w/2));
+  const yMin=Math.min(...rects.map(r=>r.cy-r.h/2));
+  const yMax=Math.max(...rects.map(r=>r.cy+r.h/2));
+  z.style.left=(xMin-padL)+'px';
+  z.style.top=(yMin-padT)+'px';
+  z.style.width=(xMax-xMin+padL+padR)+'px';
+  z.style.height=(yMax-yMin+padT+padB)+'px';
+}
+function placeZones(){
+  placeZoneEl('zoneAdapters',['tg','dc'],20,28,20,16);
+  placeZoneEl('zoneHub',['hub'],90,32,90,16);
+  placeZoneEl('zoneWorkers',['clipool','stt','tts','turnw'],18,28,18,16);
+  placeZoneEl('zoneM2',['llm','image'],20,28,20,16);
+  placeZoneEl('zoneStores',['auth','config','turns','kv','vault'],18,30,18,16);
+}
+
+// ---- spotlight ----
+const sbHeader=document.getElementById('sbHeader');
+function spotlight(id){
+  canvas.classList.add('dimmed');
+  const nd=NODES.find(n=>n.id===id);
+  const neigh=new Set([id]);
+  paths.forEach(p=>{
+    const on=p.dataset.f===id||p.dataset.t===id;
+    p.classList.toggle('hot',on);
+    if(on){neigh.add(p.dataset.f);neigh.add(p.dataset.t);}
+  });
+  svg.querySelectorAll('text[data-pk]').forEach(t=>{
+    const pk=t.dataset.pk, pp=pathByPair.get(pk);
+    t.classList.toggle('hot',pp&&pp.classList.contains('hot'));
+  });
+  Object.entries(nodeEl).forEach(([k,el])=>el.classList.toggle('hot',neigh.has(k)));
+  const b=BASE_TAGS[nd.base]||BASE_TAGS['svc'];
+  const hl=nd.h==='EX'?'external':nd.h==='M1'?'M₁ · roxabituwer':'M₂ · roxabitower';
+  sbHeader.innerHTML=`<h4>${nd.n}</h4><div class="ipath">${nd.img}</div>
+    <dl><dt>type</dt><dd style="color:${b.c}">${b.t}</dd>
+    <dt>host</dt><dd>${hl}</dd>
+    <dt>desc</dt><dd>${nd.d}</dd></dl>`;
+}
+function clearSpot(){
+  canvas.classList.remove('dimmed');
+  paths.forEach(p=>p.classList.remove('hot'));
+  svg.querySelectorAll('text').forEach(t=>t.classList.remove('hot'));
+  Object.values(nodeEl).forEach(el=>el.classList.remove('hot'));
+  sbHeader.innerHTML=`<h4>Hover = detail</h4><div class="hint">Hover a node to isolate its edges.<br>Select a use case to animate the production message lifecycle.</div>`;
+}
+
+// plane filters
+document.querySelectorAll('.flow-stage .ctl[data-plane]').forEach(c=>c.addEventListener('click',()=>{
+  c.classList.toggle('off');
+  canvas.classList.toggle('hide-'+c.dataset.plane, c.classList.contains('off'));
+}));
+
+// ============================================================
+// USE-CASE ANIMATION ENGINE
+// ============================================================
+let activeUc=null, ucState='none', ucTimer=null, ucStepIdx=0;
+const ucPlay=document.getElementById('ucPlay');
+const ucReset=document.getElementById('ucReset');
+const sbUc=document.getElementById('sbUc');
+const ucTitle=document.getElementById('ucTitle');
+const ucStepsList=document.getElementById('ucStepsList');
+const ucDesc=document.getElementById('ucDesc');
+
+function syncButtons(){
+  switch(ucState){
+    case 'none':    ucPlay.textContent='▶ play';   ucPlay.disabled=true;  ucReset.classList.remove('visible'); break;
+    case 'ready':   ucPlay.textContent='▶ play';   ucPlay.disabled=false; ucReset.classList.remove('visible'); break;
+    case 'playing': ucPlay.textContent='⏸ pause';  ucPlay.disabled=false; ucReset.classList.remove('visible'); break;
+    case 'paused':  ucPlay.textContent='▶ resume'; ucPlay.disabled=false; ucReset.classList.add('visible');    break;
+    case 'done':    ucPlay.textContent='↺ replay'; ucPlay.disabled=false; ucReset.classList.remove('visible'); break;
+  }
+}
+function resetUcVisuals(){
+  Object.values(nodeEl).forEach(el=>el.classList.remove('uc-active','uc-done'));
+  paths.forEach(p=>p.classList.remove('uc-active','uc-done'));
+  canvas.classList.remove('dimmed');
+  clearParticle(); clearSpot();
+  ucStepsList.querySelectorAll('li').forEach(li=>li.classList.remove('step-active','step-done'));
+}
+function stopTimer(){if(ucTimer){clearTimeout(ucTimer);ucTimer=null;}}
+function selectUc(idx){
+  stopTimer(); resetUcVisuals();
+  activeUc=idx; ucStepIdx=0; ucState='ready';
+  const uc=USE_CASES[idx];
+  ucTitle.textContent=uc.title;
+  ucDesc.innerHTML=uc.desc;
+  ucStepsList.innerHTML='';
+  uc.steps.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="sn">${String(i+1).padStart(2,'0')}</span>${s.label}`;
+    ucStepsList.appendChild(li);
+  });
+  sbUc.classList.add('visible');
+  document.querySelectorAll('.flow-stage .uc-btn').forEach(b=>{
+    b.classList.toggle('active',Number(b.dataset.uc)===idx);
+  });
+  syncButtons();
+}
+function applyUcStep(stepIdx){
+  const uc=USE_CASES[activeUc];
+  if(stepIdx>=uc.steps.length){ucState='done';syncButtons();return;}
+  ucStepIdx=stepIdx;
+  const step=uc.steps[stepIdx];
+  canvas.classList.add('dimmed');
+  for(let i=0;i<stepIdx;i++){
+    uc.steps[i].nodes.forEach(id=>{
+      if(nodeEl[id]){nodeEl[id].classList.remove('uc-active');nodeEl[id].classList.add('uc-done');}
+    });
+    if(uc.steps[i].edge){
+      const[ef,et]=uc.steps[i].edge;
+      const pp=pathByPair.get(pairKey(ef,et));
+      if(pp){pp.classList.remove('uc-active');pp.classList.add('uc-done');}
+    }
+  }
+  step.nodes.forEach(id=>{if(nodeEl[id])nodeEl[id].classList.add('uc-active','hot');});
+  clearParticle();
+  if(step.edge){
+    const[ef,et]=step.edge;
+    const pp=pathByPair.get(pairKey(ef,et));
+    if(pp){
+      pp.classList.add('uc-active','hot');
+      const edgeDef=EDGES.find(e=>(e.f===ef&&e.t===et)||(e.f===et&&e.t===ef));
+      spawnParticle(ef,et,edgeDef?edgeDef.plane:'message');
+    }
+  }
+  const items=ucStepsList.querySelectorAll('li');
+  items.forEach((li,i)=>{
+    li.classList.remove('step-active','step-done');
+    if(i<stepIdx)  li.classList.add('step-done');
+    if(i===stepIdx) li.classList.add('step-active');
+  });
+  const firstId=step.nodes[0];
+  if(firstId&&nodeEl[firstId]){
+    const nd=NODES.find(n=>n.id===firstId);
+    if(nd&&nd.kind!=='store'&&nd.kind!=='bus'&&ucState!=='playing'){
+      spotlight(firstId);
+    } else {
+      sbHeader.innerHTML=`<h4>${step.label}</h4>`;
+    }
+  }
+  ucTimer=setTimeout(()=>applyUcStep(stepIdx+1),900);
+}
+ucPlay.addEventListener('click',()=>{
+  if(activeUc===null) return;
+  if(ucState==='playing'){stopTimer();ucState='paused';syncButtons();}
+  else if(ucState==='done'||ucState==='ready'){resetUcVisuals();ucStepIdx=0;ucState='playing';syncButtons();applyUcStep(0);}
+  else if(ucState==='paused'){ucState='playing';syncButtons();applyUcStep(ucStepIdx);}
+});
+ucReset.addEventListener('click',()=>{stopTimer();resetUcVisuals();ucStepIdx=0;ucState='ready';syncButtons();});
+document.querySelectorAll('.flow-stage .uc-btn').forEach(b=>{
+  b.addEventListener('click',()=>selectUc(Number(b.dataset.uc)));
+});
+
+// ---- initial layout (one-shot boot guard) ----
+let booted=false;
+function init(){
+  if(booted) return;
+  booted=true;
+  loadData();
+  renderNodes();
+  draw();
+  placeZones();
+  new ResizeObserver(()=>{draw();placeZones();}).observe(canvas);
+}
+window.addEventListener('load', init);
+setTimeout(init, 60);
+
+const ucParam=new URLSearchParams(location.search).get('uc');
+if(ucParam!==null){
+  setTimeout(()=>{
+    selectUc(Number(ucParam)||0);
+    ucState='playing'; syncButtons(); applyUcStep(0);
+  },400);
+}
+})();
+</script>
