@@ -12,7 +12,7 @@
   --surface:     #18181f;          /* Forge Floor +1 */
   --accent:      #e85d04;          /* Forge Orange — one signal per composition */
   --accent-hover:#f97316;          /* Ember — glow softening */
-  --accent-on:   #fafafa;          /* text on accent button */
+  --accent-on:   #0a0a0f;          /* Obsidian on Forge Orange — AA 5.64:1. Was #fafafa (3.35:1, AA fail); #e85d04 is the brand-locked signal so the label goes dark, not the accent */
   --text:        #fafafa;          /* Spark White */
   --text-muted:  #9ca3af;          /* textdim from v17 (canonical) */
   --text-dim:    #7d8895;          /* Steel Gray — metadata only. Was #6b7280 (3.65:1 on surface, AA fail) → 4.9:1 */
